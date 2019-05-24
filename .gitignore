@@ -5,3 +5,10 @@
 /.vs
 /src/WcfDynamicServiceHost/.vs/WcfDynamicServiceHost/v15
 /src/WcfDynamicServiceHost/WcfDynamicServiceHost.sln.DotSettings.user
+/src/WcfDynamicServiceHost/packages
+/src/WcfDynamicServiceHost/DynamicServiceHost.Tests/obj/Debug
+/src/WcfDynamicServiceHost/DynamicServiceHost.Tests/bin/Debug
+/src/WcfDynamicServiceHost/DynamicServiceHost.Matcher.Tests/obj/Debug
+/src/WcfDynamicServiceHost/DynamicServiceHost.Matcher.Tests/bin/Debug
+/src/WcfDynamicServiceHost/DynamicServiceHost.Matcher/bin/Debug
+/src/WcfDynamicServiceHost/DynamicServiceHost.Matcher/obj/Debug

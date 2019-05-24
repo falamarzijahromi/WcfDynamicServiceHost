@@ -12,3 +12,10 @@
 /src/WcfDynamicServiceHost/DynamicServiceHost.Matcher.Tests/bin/Debug
 /src/WcfDynamicServiceHost/DynamicServiceHost.Matcher/bin/Debug
 /src/WcfDynamicServiceHost/DynamicServiceHost.Matcher/obj/Debug
+/src/packages
+/src/.vs/WcfDynamicServiceHost/v15
+/src/WcfDynamicServiceHost.sln.DotSettings.user
+/src/DynamicServiceHost.Matcher/bin/Debug
+/src/DynamicServiceHost.Matcher/obj/Debug
+/src/DynamicServiceHost.Matcher.Tests/obj/Debug
+/src/DynamicServiceHost.Matcher.Tests/bin/Debug

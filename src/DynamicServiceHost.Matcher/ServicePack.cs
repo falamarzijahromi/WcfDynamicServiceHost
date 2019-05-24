@@ -7,14 +7,22 @@ namespace DynamicServiceHost.Matcher
     {
         private readonly IDictionary<Type, Type> relatedTypes;
 
-        public ServicePack(Type matchType, IDictionary<Type, Type> relatedTypes)
+        internal ServicePack()
         {
-            MatchType = matchType;
-
-            this.relatedTypes = relatedTypes;
+            relatedTypes = new Dictionary<Type, Type>();
         }
 
-        public Type MatchType { get; }
+        internal void AddRelatedType(Type keyType, Type MatchType)
+        {
+            relatedTypes.Add(keyType, MatchType);
+        }
+
+        internal void SetMatchType(Type matchType)
+        {
+            MatchType = matchType;
+        }
+
+        public Type MatchType { get; private set; }
 
         public Dictionary<Type, Type> RelatedTypes => new Dictionary<Type, Type>(relatedTypes);
     }

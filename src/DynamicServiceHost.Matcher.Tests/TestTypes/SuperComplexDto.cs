@@ -3,8 +3,21 @@ using System.Collections.Generic;
 
 namespace DynamicServiceHost.Matcher.Tests.TestTypes
 {
-    public class SimpleDto
+    public class SuperComplexDto
     {
+        public SimpleDto SimpleDto { get; set; }
+        public SimpleDto SimpleDto2 { get; set; }
+        public SimpleDto[] SimpleDtoArr { get; set; }
+        public List<SimpleDto> SimpleArr2 { get; set; }
+
+        public SimpleDto2 SimpleDto21 { get; set; }
+        public SimpleDto2 SimpleDto22 { get; set; }
+        public SimpleDto2 SimpleDto23 { get; set; }
+        public SimpleDto2[] SimpleDto2Arr { get; set; }
+        public SimpleDto2[] SimpleDto2Arr2 { get; set; }
+        public List<SimpleDto2> SimpleDto2List { get; set; }
+        public List<SimpleDto2> SimpleDto2List2 { get; set; }
+
         public string String { get; set; }
         public ConsoleColor Enum { get; set; }
         public object Object { get; set; }

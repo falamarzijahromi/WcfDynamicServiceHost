@@ -3,8 +3,11 @@ using System.Collections.Generic;
 
 namespace DynamicServiceHost.Matcher.Tests.TestTypes
 {
-    public class SimpleDto
+    public class ComplexDto
     {
+        public SimpleDto SimpleDto { get; set; }
+        public SimpleDto2 SimpleDto2 { get; set; }
+
         public string String { get; set; }
         public ConsoleColor Enum { get; set; }
         public object Object { get; set; }

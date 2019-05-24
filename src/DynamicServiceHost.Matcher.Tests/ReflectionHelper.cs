@@ -30,6 +30,11 @@ namespace DynamicServiceHost.Matcher.Tests
             return typeProps.All(prop => MemberHasAttribute(prop, attributeType, propertiesValuesMapping));
         }
 
+        public static bool TypeHasName(Type type, string typeName)
+        {
+            return type.Name == typeName;
+        }
+
         private static bool MemberHasAttribute(
             MemberInfo member, 
             Type attributeType,

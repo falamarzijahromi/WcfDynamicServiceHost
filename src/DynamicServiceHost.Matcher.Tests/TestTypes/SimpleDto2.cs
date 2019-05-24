@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace DynamicServiceHost.Matcher.Tests.TestTypes
 {
-    public class SimpleDto
+    public class SimpleDto2
     {
         public string String { get; set; }
         public ConsoleColor Enum { get; set; }

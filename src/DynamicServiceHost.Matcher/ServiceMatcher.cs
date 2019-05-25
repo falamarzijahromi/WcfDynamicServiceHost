@@ -2,6 +2,7 @@
 using DynamicTypeGenerator.Abstracts;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace DynamicServiceHost.Matcher
@@ -57,57 +58,117 @@ namespace DynamicServiceHost.Matcher
         {
             if (targetType.IsInterface)
             {
-                DynamicTypeBuilderFactory.CreateClassBuilder(
+                return DynamicTypeBuilderFactory.CreateClassBuilder(
                     $"{targetType.Name}{namePostfix}",
-                    new Dictionary<string, Type> {{"contractedService", targetType}});
+                    new Dictionary<string, Type> { { "contractedService", targetType } });
             }
-            
+
             return DynamicTypeBuilderFactory.CreateDtoBuilder(targetType.Name);
         }
 
         private void BuildMatchType(IDynamicTypeBuilder typeBuilder, ServicePack retPack)
         {
-            SetTypeAttribute(typeBuilder);
+            SetAttributes_Type(typeBuilder, typeAttributes);
 
-            SetProperties(typeBuilder, retPack);
+            SetProperties(typeBuilder, retPack, targetType);
+
+            SetMethods(typeBuilder, retPack);
         }
 
-        private void SetProperties(IDynamicTypeBuilder typeBuilder, ServicePack retPack)
+        private void SetMethods(IDynamicTypeBuilder typeBuilder, ServicePack retPack)
         {
-            var typeProps = targetType.GetProperties();
+            var searchBindingFlags = GetSearchBindingFlags();
+
+            var typeMethods = targetType.GetMethods(searchBindingFlags).Where(method => method.IsVirtual);
+
+            foreach (var method in typeMethods)
+            {
+                var methodBuilder = typeBuilder.SetMethod(method.Name);
+
+                SetMethodReturnType(retPack, method, methodBuilder);
+
+                SetMethodParams(retPack, method, methodBuilder);
+            }
+        }
+
+        private BindingFlags GetSearchBindingFlags()
+        {
+            if (targetType.IsClass)
+            {
+                return BindingFlags.DeclaredOnly;
+            }
+
+            return BindingFlags.Public | BindingFlags.Instance;
+        }
+
+        private void SetMethodParams(ServicePack retPack, MethodInfo method, IDynamicMethodBuilder methodBuilder)
+        {
+            var methodParams = method.GetParameters();
+
+            foreach (var param in methodParams)
+            {
+                var matchParamType = MapType(param.ParameterType, retPack);
+
+                methodBuilder.SetParameter(matchParamType);
+            }
+        }
+
+        private void SetMethodReturnType(ServicePack retPack, MethodInfo method, IDynamicMethodBuilder methodBuilder)
+        {
+            var matchReturnType = MapType(method.ReturnType, retPack);
+
+            methodBuilder.SetReturnType(matchReturnType);
+        }
+
+        private void SetProperties(IDynamicTypeBuilder typeBuilder, ServicePack retPack, Type type)
+        {
+            var typeProps = type.GetProperties();
 
             foreach (var prop in typeProps)
             {
-                MapType(prop, retPack);
+                var matchType = MapType(prop.PropertyType, retPack);
 
-                if (retPack.RelatedTypes.ContainsKey(prop.PropertyType))
+                var propertyBuilder = typeBuilder.SetProperty(prop.Name, matchType);
+
+                SetAttributes(propertyBuilder, propAttributes);
+
+                if (matchType != prop.PropertyType)
                 {
-                    var propertyBuilder = typeBuilder.SetProperty(prop.Name, retPack.RelatedTypes[prop.PropertyType]);
-
-                    SetPropertyAttributes(propertyBuilder);
-
+                    //SetProperties(typeBuilder, retPack, prop.PropertyType);
                     MapSubTypes(prop.PropertyType, retPack);
                 }
             }
         }
 
-        private void MapType(PropertyInfo prop, ServicePack retPack)
+        private Type MapType(Type type, ServicePack retPack)
         {
-            if (CheckMapPossiblity(prop, out Type typeToMap))
+            Type matchType = null;
+            Type typeToMap = null;
+
+            if (retPack.RelatedTypes.Values.Any(sType => sType.Equals(type)))
+            {
+                matchType = retPack.RelatedTypes.Single(kVT => kVT.Value.Equals(type)).Key;
+            }
+
+            if (matchType == null && CheckMapPossiblity(type, out typeToMap))
             {
                 var propMatcher = new ServiceMatcher(typeToMap);
 
                 var propServicePack = propMatcher.Pack();
 
+                matchType = propServicePack.MatchType;
+
                 AddRelatedTypesToRetPack(retPack, propServicePack);
             }
+
+            return matchType ?? type;
         }
 
-        private bool CheckMapPossiblity(PropertyInfo prop, out Type typeToMap)
+        private bool CheckMapPossiblity(Type type, out Type typeToMap)
         {
-            typeToMap = PopGenericOrArray(prop.PropertyType);
+            typeToMap = PopGenericOrArray(type);
 
-            typeToMap = typeToMap ?? prop.PropertyType;
+            typeToMap = typeToMap ?? type;
 
             return CheckMappingCondition(typeToMap);
         }
@@ -162,13 +223,9 @@ namespace DynamicServiceHost.Matcher
 
             foreach (var prop in props)
             {
-                if (CheckMapPossiblity(prop, out Type typeToMap))
+                if (CheckMapPossiblity(prop.PropertyType, out Type typeToMap))
                 {
-                    var propMatcher = new ServiceMatcher(typeToMap);
-
-                    var propServicePack = propMatcher.Pack();
-
-                    AddRelatedTypesToRetPack(retPack, propServicePack);
+                    MapType(typeToMap, retPack);
                 }
             }
         }
@@ -181,17 +238,21 @@ namespace DynamicServiceHost.Matcher
             }
         }
 
-        private void SetPropertyAttributes(IDynamicPropertyBuilder propertyBuilder)
+        private void SetAttributes(
+            IDynamicAttributeSetter attributeSetter, 
+            IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> attTuples)
         {
-            foreach (var attribute in propAttributes)
+            foreach (var attribute in attTuples)
             {
-                propertyBuilder.SetAttribute(attribute.Item1, attribute.Item2, attribute.Item3);
+                attributeSetter.SetAttribute(attribute.Item1, attribute.Item2, attribute.Item3);
             }
         }
 
-        private void SetTypeAttribute(IDynamicTypeBuilder typeBuilder)
+        private void SetAttributes_Type(
+            IDynamicTypeBuilder typeBuilder,
+            IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> attTuples)
         {
-            foreach (var attribute in typeAttributes)
+            foreach (var attribute in attTuples)
             {
                 typeBuilder.SetAttribute(attribute.Item1, attribute.Item2, attribute.Item3);
             }

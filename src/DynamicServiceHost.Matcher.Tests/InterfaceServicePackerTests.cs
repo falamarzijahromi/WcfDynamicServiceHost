@@ -9,6 +9,7 @@ namespace DynamicServiceHost.Matcher.Tests
     {
         [Theory]
         [InlineData(typeof(ISimpleInterface))]
+        [InlineData(typeof(IComplexInterface))]
         public void Specified_Interface_Must_Be_Evaluated_With_Proper_Service_Pack(Type type)
         {
             const string NamePostfix = "_Connect";
@@ -23,7 +24,7 @@ namespace DynamicServiceHost.Matcher.Tests
         private void AssertMatchTypeMappedCorrectly(Type type, ServicePack servicePack, string namePostfix)
         {
             Assert.True(servicePack.MatchType.IsClass);
-            Assert.True(ReflectionHelper.TypeHasName(servicePack.MatchType, $"{type.Name}_{namePostfix}"));
+            Assert.True(ReflectionHelper.TypeHasName(servicePack.MatchType, $"{type.Name}{namePostfix}"));
 
             var methods = type.GetMethods();
 
@@ -43,7 +44,9 @@ namespace DynamicServiceHost.Matcher.Tests
 
             foreach (var param in @params)
             {
-                var paramType = param.ParameterType;
+                var paramType = PopGenericOrArray(param.ParameterType);
+
+                paramType = paramType ?? param.ParameterType;
 
                 if (paramType.IsClass &&
                     !paramType.IsSealed &&
@@ -106,12 +109,26 @@ namespace DynamicServiceHost.Matcher.Tests
 
         private Type PopArray(Type returnType)
         {
-            throw new NotImplementedException();
+            var retType = default(Type);
+
+            if (returnType.IsArray)
+            {
+                retType = returnType.GetElementType();
+            }
+
+            return retType;
         }
 
         private Type PopGeneric(Type returnType)
         {
-            throw new NotImplementedException();
+            var retType = default(Type);
+
+            if (returnType.IsGenericType)
+            {
+                retType = returnType.GetGenericArguments()[0];
+            }
+
+            return retType;
         }
     }
 }

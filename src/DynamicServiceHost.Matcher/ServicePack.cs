@@ -12,9 +12,12 @@ namespace DynamicServiceHost.Matcher
             relatedTypes = new Dictionary<Type, Type>();
         }
 
-        internal void AddRelatedType(Type keyType, Type MatchType)
+        internal void AddRelatedType(Type keyType, Type valueType)
         {
-            relatedTypes.Add(keyType, MatchType);
+            if (!relatedTypes.Values.Contains(valueType))
+            {
+                relatedTypes.Add(keyType, valueType);
+            }
         }
 
         internal void SetMatchType(Type matchType)

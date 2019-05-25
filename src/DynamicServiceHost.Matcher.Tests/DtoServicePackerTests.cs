@@ -39,6 +39,8 @@ namespace DynamicServiceHost.Matcher.Tests
 
             var simpleDtoServicePack = matcher.Pack();
 
+            AssertMatchedPropertyHasProperProperties(simpleDtoType, simpleDtoServicePack.MatchType);
+
             AssertOnHavingAllRelatedTypes(simpleDtoServicePack, simpleDtoType);
 
             AssertOnHavingAttributeOnType(simpleDtoServicePack.MatchType, attributeType, propertiesValuesMapping);
@@ -59,7 +61,14 @@ namespace DynamicServiceHost.Matcher.Tests
 
             var complexDtoServicePack = matcher.Pack();
 
+            AssertMatchedPropertyHasProperProperties(type, complexDtoServicePack.MatchType);
+
             AssertOnHavingAllRelatedTypes(complexDtoServicePack, dtoType);
+        }
+
+        private void AssertMatchedPropertyHasProperProperties(Type type, Type matchedType)
+        {
+            Assert.True(ReflectionHelper.HasSamePropertiesRecursive(type, matchedType));
         }
 
         private void AssertOnHavingAttributeOnAllProperties(Type matchType, Type attributeType, Dictionary<string, object> propertiesValuesMapping)

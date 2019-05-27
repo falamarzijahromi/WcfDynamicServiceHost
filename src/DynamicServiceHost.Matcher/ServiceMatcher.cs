@@ -10,7 +10,7 @@ namespace DynamicServiceHost.Matcher
     public class ServiceMatcher
     {
         private readonly Type targetType;
-        private readonly string namePostfix; 
+        private readonly string namePostfix;
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> typeAttributes;
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> allMembersAttributes;
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> involvedAttributes;
@@ -166,7 +166,9 @@ namespace DynamicServiceHost.Matcher
                 matchType = retPack.RelatedTypes.Single(kVT => kVT.Value.Equals(type)).Key;
             }
 
-            if (matchType == null && CheckMapPossiblity(type, out Type typeToMap))
+            Type typeToMap = null;
+
+            if (matchType == null && CheckMapPossiblity(type, out typeToMap))
             {
                 var propMatcher = new ServiceMatcher(typeToMap);
 
@@ -260,7 +262,9 @@ namespace DynamicServiceHost.Matcher
 
             foreach (var prop in props)
             {
-                if (CheckMapPossiblity(prop.PropertyType, out Type typeToMap))
+                Type typeToMap = null;
+
+                if (CheckMapPossiblity(prop.PropertyType, out typeToMap))
                 {
                     MapType(typeToMap, retPack);
                 }

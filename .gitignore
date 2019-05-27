@@ -21,3 +21,5 @@
 /src/DynamicServiceHost.Matcher.Tests/bin/Debug
 /src/DynamicServiceHost.Host/obj/Debug
 /src/DynamicServiceHost.Host.Tests/obj/Debug
+/src/DynamicServiceHost.Host.Tests/bin/Debug
+/src/DynamicServiceHost.Host/bin/Debug

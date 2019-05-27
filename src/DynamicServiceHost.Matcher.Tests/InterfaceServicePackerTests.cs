@@ -1,5 +1,6 @@
 ﻿using DynamicServiceHost.Matcher.Tests.TestTypes;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Xunit;
 
@@ -19,6 +20,112 @@ namespace DynamicServiceHost.Matcher.Tests
             var servicePack = matcher.Pack();
 
             AssertMatchTypeMappedCorrectly(type, servicePack, NamePostfix);
+        }
+
+        [Fact]
+        public void Specified_Interface_Must_Be_Attributed_Correctly()
+        {
+            var interfaceType = typeof(ISimpleInterface);
+            var attributeType = typeof(SomeAttribute);
+
+            var ctorParams = new Dictionary<Type, object> {{typeof(string), "attributeName"}};
+            var props = new Dictionary<string, object> {{"Index", 879}};
+
+            var matcher = new ServiceMatcher(interfaceType);
+
+            matcher.SetAttributeOnType(attributeType, ctorParams, props);
+
+            var servicePack = matcher.Pack();
+
+            AssertOnHavingAttribute(servicePack.MatchType, attributeType, props);
+        }
+
+        [Fact]
+        public void Specified_Interface_Must_Be_Attributed_Correctly_For_All_Methods()
+        {
+            var interfaceType = typeof(ISimpleInterface);
+            var attributeType = typeof(SomeAttribute);
+
+            var ctorParams = new Dictionary<Type, object> { { typeof(string), "attributeName" } };
+            var props = new Dictionary<string, object> { { "Index", 879 } };
+
+            var matcher = new ServiceMatcher(interfaceType);
+
+            matcher.SetAttributeForAllMembers(attributeType, ctorParams, props);
+
+            var servicePack = matcher.Pack();
+
+            AssertOnHavingAttributeOnAllMethods(servicePack.MatchType, attributeType, props);
+        }
+
+        [Fact]
+        public void All_Types_Involved_In_Specified_Interface_Must_Be_Attributed_With_Specified_Attribute()
+        {
+            var interfaceType = typeof(IComplexInterface);
+            var attributeType = typeof(SomeAttribute);
+
+            var ctorParams = new Dictionary<Type, object> { { typeof(string), "attributeName" } };
+            var props = new Dictionary<string, object> { { "Index", 879 } };
+
+            var matcher = new ServiceMatcher(interfaceType);
+
+            matcher.SetAttributeForAllInvolvedTypes(attributeType, ctorParams, props);
+
+            var servicePack = matcher.Pack();
+
+            AssertOnAllInvolvedTypesHasAttribute(servicePack, attributeType, props);
+        }
+
+        [Fact]
+        public void All_Types_Member_Involved_In_Specified_Interface_Must_Be_Attributed_With_Specified_Attribute()
+        {
+            var interfaceType = typeof(IComplexInterface);
+            var attributeType = typeof(SomeAttribute);
+
+            var ctorParams = new Dictionary<Type, object> { { typeof(string), "attributeName" } };
+            var props = new Dictionary<string, object> { { "Index", 879 } };
+
+            var matcher = new ServiceMatcher(interfaceType);
+
+            matcher.SetAttributeForAllInvolvedTypeMembers(attributeType, ctorParams, props);
+
+            var servicePack = matcher.Pack();
+
+            AssertOnAllInvolvedTypeMembersHasAttribute(servicePack, attributeType, props);
+        }
+
+        private void AssertOnAllInvolvedTypeMembersHasAttribute(ServicePack servicePack, Type attributeType, Dictionary<string, object> props)
+        {
+            var relatedTypes = servicePack.RelatedTypes;
+
+            relatedTypes.Remove(servicePack.MatchType);
+
+            foreach (var involedType in relatedTypes.Keys)
+            {
+                Assert.True(ReflectionHelper.HasAttributeOnAllMembers(involedType, attributeType, props));
+            }
+        }
+
+        private void AssertOnAllInvolvedTypesHasAttribute(ServicePack servicePack, Type attributeType, Dictionary<string, object> props)
+        {
+            var relatedTypes = servicePack.RelatedTypes;
+
+            relatedTypes.Remove(servicePack.MatchType);
+
+            foreach (var involedType in relatedTypes.Keys)
+            {
+                Assert.True(ReflectionHelper.HasAttribute(involedType, attributeType, props));
+            }
+        }
+
+        private void AssertOnHavingAttributeOnAllMethods(Type matchType, Type attributeType, Dictionary<string, object> props)
+        {
+            Assert.True(ReflectionHelper.HasAttributeOnAllMethods(matchType, attributeType, props));
+        }
+
+        private void AssertOnHavingAttribute(Type matchType, Type attributeType, Dictionary<string, object> props)
+        {
+            Assert.True(ReflectionHelper.HasAttribute(matchType, attributeType, props));
         }
 
         private void AssertMatchTypeMappedCorrectly(Type type, ServicePack servicePack, string namePostfix)

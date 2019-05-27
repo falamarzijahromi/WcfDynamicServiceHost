@@ -19,3 +19,5 @@
 /src/DynamicServiceHost.Matcher/obj/Debug
 /src/DynamicServiceHost.Matcher.Tests/obj/Debug
 /src/DynamicServiceHost.Matcher.Tests/bin/Debug
+/src/DynamicServiceHost.Host/obj/Debug
+/src/DynamicServiceHost.Host.Tests/obj/Debug

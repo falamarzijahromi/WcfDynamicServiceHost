@@ -54,6 +54,24 @@ namespace DynamicServiceHost.Matcher.Tests
             return true;
         }
 
+        public static bool HasAttributeOnAllMethods(Type matchType, Type attributeType, Dictionary<string, object> props)
+        {
+            var matchTypeMethods = matchType.GetMethods(BindingFlags.Instance | BindingFlags.Public).Where(meth =>
+                meth.Attributes ==
+                (MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName)).Where(method => method.IsVirtual);
+
+            return matchTypeMethods.All(meth => MemberHasAttribute(meth, attributeType, props));
+        }
+
+        public static bool HasAttributeOnAllMembers(Type involedType, Type attributeType, Dictionary<string, object> props)
+        {
+            var allMethodsHasAttribute = HasAttributeOnAllMethods(involedType, attributeType, props);
+
+            var allPropsHasAttribute = HasAttributeOnAllProperties(involedType, attributeType, props);
+
+            return allPropsHasAttribute && allMethodsHasAttribute;
+        }
+
         private static bool MemberHasAttribute(
             MemberInfo member, 
             Type attributeType,

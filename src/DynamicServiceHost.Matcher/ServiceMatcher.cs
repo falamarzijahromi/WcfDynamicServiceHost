@@ -10,9 +10,11 @@ namespace DynamicServiceHost.Matcher
     public class ServiceMatcher
     {
         private readonly Type targetType;
-        private readonly string namePostfix;
+        private readonly string namePostfix; 
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> typeAttributes;
-        private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> propAttributes;
+        private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> allMembersAttributes;
+        private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> involvedAttributes;
+        private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> involvedTypeMembersAttributes;
 
         public ServiceMatcher(Type targetType, string namePostfix = null)
         {
@@ -20,21 +22,35 @@ namespace DynamicServiceHost.Matcher
             this.namePostfix = namePostfix ?? string.Empty;
 
             typeAttributes = new List<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>>();
+            allMembersAttributes = new List<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>>();
 
-            propAttributes = new List<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>>();
+            involvedAttributes = new List<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>>();
+            involvedTypeMembersAttributes = new List<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>>();
         }
 
-        public void SetAttributeOnType(Type attributeType, Dictionary<Type, object> ctorParamsValuesMapping,
-            Dictionary<string, object> propertiesValuesMapping)
+        public void SetAttributeOnType(Type attributeType, IDictionary<Type, object> ctorParamsValuesMapping,
+            IDictionary<string, object> propertiesValuesMapping)
         {
             typeAttributes.Add(new Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>(attributeType,
                 ctorParamsValuesMapping, propertiesValuesMapping));
         }
 
-        public void SetAttributeForAllMembers(Type attributeType, Dictionary<Type, object> ctorParamsValuesMapping, Dictionary<string, object> propertiesValuesMapping)
+        public void SetAttributeForAllMembers(Type attributeType, IDictionary<Type, object> ctorParamsValuesMapping, IDictionary<string, object> propertiesValuesMapping)
         {
-            propAttributes.Add(new Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>(attributeType,
+            allMembersAttributes.Add(new Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>(attributeType,
                 ctorParamsValuesMapping, propertiesValuesMapping));
+        }
+
+        public void SetAttributeForAllInvolvedTypes(Type attributeType, IDictionary<Type, object> ctorParams, IDictionary<string, object> props)
+        {
+            involvedAttributes.Add(new Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>(attributeType,
+                ctorParams, props));
+        }
+
+        public void SetAttributeForAllInvolvedTypeMembers(Type attributeType, IDictionary<Type, object> ctorParams, IDictionary<string, object> props)
+        {
+            involvedTypeMembersAttributes.Add(new Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>(attributeType,
+                ctorParams, props));
         }
 
         public ServicePack Pack()
@@ -88,6 +104,8 @@ namespace DynamicServiceHost.Matcher
                 SetMethodReturnType(retPack, method, methodBuilder);
 
                 SetMethodParams(retPack, method, methodBuilder);
+
+                SetAttributes(methodBuilder, allMembersAttributes);
             }
         }
 
@@ -130,11 +148,10 @@ namespace DynamicServiceHost.Matcher
 
                 var propertyBuilder = typeBuilder.SetProperty(prop.Name, matchType);
 
-                SetAttributes(propertyBuilder, propAttributes);
+                SetAttributes(propertyBuilder, allMembersAttributes);
 
                 if (matchType != prop.PropertyType)
                 {
-                    //SetProperties(typeBuilder, retPack, prop.PropertyType);
                     MapSubTypes(prop.PropertyType, retPack);
                 }
             }
@@ -143,16 +160,19 @@ namespace DynamicServiceHost.Matcher
         private Type MapType(Type type, ServicePack retPack)
         {
             Type matchType = null;
-            Type typeToMap = null;
 
             if (retPack.RelatedTypes.Values.Any(sType => sType.Equals(type)))
             {
                 matchType = retPack.RelatedTypes.Single(kVT => kVT.Value.Equals(type)).Key;
             }
 
-            if (matchType == null && CheckMapPossiblity(type, out typeToMap))
+            if (matchType == null && CheckMapPossiblity(type, out Type typeToMap))
             {
                 var propMatcher = new ServiceMatcher(typeToMap);
+
+                SetInvolvedTypesAttributes(propMatcher);
+
+                SetInvolvedTypeMembersAttributes(propMatcher);
 
                 var propServicePack = propMatcher.Pack();
 
@@ -162,6 +182,23 @@ namespace DynamicServiceHost.Matcher
             }
 
             return matchType ?? type;
+        }
+
+        private void SetInvolvedTypeMembersAttributes(ServiceMatcher propMatcher)
+        {
+            foreach (var attribute in involvedTypeMembersAttributes)
+            {
+                propMatcher.SetAttributeForAllMembers(attribute.Item1, attribute.Item2, attribute.Item3);
+                propMatcher.SetAttributeForAllInvolvedTypeMembers(attribute.Item1, attribute.Item2, attribute.Item3);
+            }
+        }
+
+        private void SetInvolvedTypesAttributes(ServiceMatcher propMatcher)
+        {
+            foreach (var attribute in involvedAttributes)
+            {
+                propMatcher.SetAttributeOnType(attribute.Item1, attribute.Item2, attribute.Item3);
+            }
         }
 
         private bool CheckMapPossiblity(Type type, out Type typeToMap)
@@ -239,7 +276,7 @@ namespace DynamicServiceHost.Matcher
         }
 
         private void SetAttributes(
-            IDynamicAttributeSetter attributeSetter, 
+            IDynamicAttributeSetter attributeSetter,
             IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> attTuples)
         {
             foreach (var attribute in attTuples)

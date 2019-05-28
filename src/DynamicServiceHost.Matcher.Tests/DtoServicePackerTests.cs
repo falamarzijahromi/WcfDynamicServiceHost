@@ -25,7 +25,7 @@ namespace DynamicServiceHost.Matcher.Tests
                 {nameof(SomeAttribute.Index), 5},
             };
 
-            var matcher = new ServiceMatcher(simpleDtoType);
+            var matcher = new ServiceMatcher(simpleDtoType, TypeCategories.Dto);
 
             matcher.SetAttributeOnType(
                 attributeType,
@@ -57,7 +57,7 @@ namespace DynamicServiceHost.Matcher.Tests
         {
             var dtoType = type;
 
-            var matcher = new ServiceMatcher(dtoType);
+            var matcher = new ServiceMatcher(dtoType, TypeCategories.Dto);
 
             var complexDtoServicePack = matcher.Pack();
 

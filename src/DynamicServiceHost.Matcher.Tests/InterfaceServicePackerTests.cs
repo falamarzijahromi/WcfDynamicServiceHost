@@ -15,7 +15,7 @@ namespace DynamicServiceHost.Matcher.Tests
         {
             const string NamePostfix = "_Connect";
 
-            var matcher = new ServiceMatcher(type, NamePostfix);
+            var matcher = new ServiceMatcher(type, TypeCategories.Class, NamePostfix);
 
             var servicePack = matcher.Pack();
 
@@ -31,7 +31,7 @@ namespace DynamicServiceHost.Matcher.Tests
             var ctorParams = new Dictionary<Type, object> {{typeof(string), "attributeName"}};
             var props = new Dictionary<string, object> {{"Index", 879}};
 
-            var matcher = new ServiceMatcher(interfaceType);
+            var matcher = new ServiceMatcher(interfaceType, TypeCategories.Class);
 
             matcher.SetAttributeOnType(attributeType, ctorParams, props);
 
@@ -49,7 +49,7 @@ namespace DynamicServiceHost.Matcher.Tests
             var ctorParams = new Dictionary<Type, object> { { typeof(string), "attributeName" } };
             var props = new Dictionary<string, object> { { "Index", 879 } };
 
-            var matcher = new ServiceMatcher(interfaceType);
+            var matcher = new ServiceMatcher(interfaceType, TypeCategories.Class);
 
             matcher.SetAttributeForAllMembers(attributeType, ctorParams, props);
 
@@ -67,7 +67,7 @@ namespace DynamicServiceHost.Matcher.Tests
             var ctorParams = new Dictionary<Type, object> { { typeof(string), "attributeName" } };
             var props = new Dictionary<string, object> { { "Index", 879 } };
 
-            var matcher = new ServiceMatcher(interfaceType);
+            var matcher = new ServiceMatcher(interfaceType, TypeCategories.Class);
 
             matcher.SetAttributeForAllInvolvedTypes(attributeType, ctorParams, props);
 
@@ -85,7 +85,7 @@ namespace DynamicServiceHost.Matcher.Tests
             var ctorParams = new Dictionary<Type, object> { { typeof(string), "attributeName" } };
             var props = new Dictionary<string, object> { { "Index", 879 } };
 
-            var matcher = new ServiceMatcher(interfaceType);
+            var matcher = new ServiceMatcher(interfaceType, TypeCategories.Interface);
 
             matcher.SetAttributeForAllInvolvedTypeMembers(attributeType, ctorParams, props);
 

@@ -23,3 +23,7 @@
 /src/DynamicServiceHost.Host.Tests/obj/Debug
 /src/DynamicServiceHost.Host.Tests/bin/Debug
 /src/DynamicServiceHost.Host/bin/Debug
+/src/DynamicWcfServiceHost.Proxy/bin/Debug
+/src/DynamicWcfServiceHost.Proxy/obj/Debug
+/src/DynamicWcfServiceHost.Shared/bin/Debug
+/src/DynamicWcfServiceHost.Shared/obj/Debug

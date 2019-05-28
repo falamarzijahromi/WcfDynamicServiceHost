@@ -10,15 +10,18 @@ namespace DynamicServiceHost.Matcher
     public class ServiceMatcher
     {
         private readonly Type targetType;
+        private readonly TypeCategories typeCategory;
         private readonly string namePostfix;
+
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> typeAttributes;
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> allMembersAttributes;
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> involvedAttributes;
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> involvedTypeMembersAttributes;
 
-        public ServiceMatcher(Type targetType, string namePostfix = null)
+        public ServiceMatcher(Type targetType, TypeCategories typeCategory, string namePostfix = null)
         {
             this.targetType = targetType;
+            this.typeCategory = typeCategory;
             this.namePostfix = namePostfix ?? string.Empty;
 
             typeAttributes = new List<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>>();
@@ -72,14 +75,22 @@ namespace DynamicServiceHost.Matcher
 
         private IDynamicTypeBuilder CreateDynamicTypeBuilder()
         {
-            if (targetType.IsInterface)
+            switch (typeCategory)
             {
-                return DynamicTypeBuilderFactory.CreateClassBuilder(
-                    $"{targetType.Name}{namePostfix}",
-                    new Dictionary<string, Type> { { "contractedService", targetType } });
-            }
+                case TypeCategories.Class:
+                    return DynamicTypeBuilderFactory.CreateClassBuilder(
+                        $"{targetType.Name}{namePostfix}",
+                        new Dictionary<string, Type> { { "contractedService", targetType } });
 
-            return DynamicTypeBuilderFactory.CreateDtoBuilder(targetType.Name);
+                case TypeCategories.Dto:
+                    return DynamicTypeBuilderFactory.CreateDtoBuilder($"{targetType.Name}{namePostfix}");
+
+                case TypeCategories.Interface:
+                    return DynamicTypeBuilderFactory.CreateInterfaceBuilder($"{targetType.Name}{namePostfix}");
+
+                default:
+                    throw new Exception();
+            }
         }
 
         private void BuildMatchType(IDynamicTypeBuilder typeBuilder, ServicePack retPack)
@@ -170,7 +181,7 @@ namespace DynamicServiceHost.Matcher
 
             if (matchType == null && CheckMapPossiblity(type, out typeToMap))
             {
-                var propMatcher = new ServiceMatcher(typeToMap);
+                var propMatcher = new ServiceMatcher(typeToMap, TypeCategories.Dto);
 
                 SetInvolvedTypesAttributes(propMatcher);
 
@@ -200,6 +211,7 @@ namespace DynamicServiceHost.Matcher
             foreach (var attribute in involvedAttributes)
             {
                 propMatcher.SetAttributeOnType(attribute.Item1, attribute.Item2, attribute.Item3);
+                propMatcher.SetAttributeForAllInvolvedTypes(attribute.Item1, attribute.Item2, attribute.Item3);
             }
         }
 

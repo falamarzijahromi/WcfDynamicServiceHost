@@ -27,8 +27,10 @@ namespace DynamicServiceHost.Host.WcfRequirements
 
         public void ReleaseInstance(InstanceContext instanceContext, object instance)
         {
-            if (instance is IDisposable disposeInstance)
+            if (instance is IDisposable)
             {
+                var disposeInstance = instance as IDisposable;
+
                 disposeInstance.Dispose();
             }
         }

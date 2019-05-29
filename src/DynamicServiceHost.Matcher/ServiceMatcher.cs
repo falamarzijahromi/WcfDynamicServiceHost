@@ -192,8 +192,9 @@ namespace DynamicServiceHost.Matcher
                 matchType = retPack.RelatedTypes.Single(kVT => kVT.Value.Equals(type)).Key;
             }
 
+            Type typeToMap;
 
-            if (matchType == null && CheckMapPossiblity(type, out Type typeToMap))
+            if (matchType == null && CheckMapPossiblity(type, out typeToMap))
             {
                 var propMatcher = new ServiceMatcher(typeToMap, TypeCategories.Dto);
 
@@ -289,7 +290,9 @@ namespace DynamicServiceHost.Matcher
             foreach (var prop in props)
             {
 
-                if (CheckMapPossiblity(prop.PropertyType, out Type typeToMap))
+                Type typeToMap;
+
+                if (CheckMapPossiblity(prop.PropertyType, out typeToMap))
                 {
                     MapType(typeToMap, retPack);
                 }

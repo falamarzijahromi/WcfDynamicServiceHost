@@ -1,12 +1,13 @@
 ﻿using DynamicServiceHost.Matcher;
 using System;
 using System.Collections.Generic;
+using ServicePack = DynamicWcfServiceHost.Shared.DGenRequirements.ServicePack;
 
 namespace DynamicWcfServiceHost.Shared.Factories
 {
     public class TypeFactory
     {
-        public static SharedServicePack CreateInterfaceServicePack(
+        public static ServicePack CreateInterfaceServicePack(
             Type type,
             string typePostfix,
             IList<AttributePack> onType,
@@ -18,28 +19,44 @@ namespace DynamicWcfServiceHost.Shared.Factories
                 forAllmembers, forAllInvolvedTypes, forAllInvolvedTypeMembers);
         }
 
-        public static SharedServicePack CreateClassServicePack(
+        public static ServicePack CreateClassServicePack(
             Type type,
             string typePostfix,
             IList<AttributePack> onType,
             IList<AttributePack> forAllmembers,
             IList<AttributePack> forAllInvolvedTypes,
-            IList<AttributePack> forAllInvolvedTypeMembers)
+            IList<AttributePack> forAllInvolvedTypeMembers, 
+            IDictionary<string, Type> extraCtorParams = null)
         {
             return CreateServicePack(type, TypeCategories.Class, typePostfix, onType,
-                forAllmembers, forAllInvolvedTypes, forAllInvolvedTypeMembers);
+                forAllmembers, forAllInvolvedTypes, forAllInvolvedTypeMembers, extraCtorParams);
         }
 
-        private static SharedServicePack CreateServicePack(
+        public static ServicePack CreateImplementationServicePack(
+            Type type, Type @interface,
+            string typePostfix,
+            IDictionary<string, Type> extraCtorParams = null)
+        {
+            return CreateServicePack(
+                type, TypeCategories.Implementation, typePostfix, 
+                new List<AttributePack>(), 
+                new List<AttributePack>(), 
+                new List<AttributePack>(),
+                new List<AttributePack>(), extraCtorParams, @interface);
+        }
+
+        private static ServicePack CreateServicePack(
             Type type,
             TypeCategories typeCategory,
             string typePostfix,
             IList<AttributePack> onType,
             IList<AttributePack> forAllmembers,
             IList<AttributePack> forAllInvolvedTypes,
-            IList<AttributePack> forAllInvolvedTypeMembers)
+            IList<AttributePack> forAllInvolvedTypeMembers,
+            IDictionary<string, Type> extraCtorParams = null,
+            Type @interface = null)
         {
-            var matcher = new ServiceMatcher(type, typeCategory, typePostfix);
+            var matcher = new ServiceMatcher(type, typeCategory, typePostfix, extraCtorParams, @interface);
 
             SetOnTypeAttributes(matcher, onType);
             SetForAllmembersAttributes(matcher, forAllmembers);

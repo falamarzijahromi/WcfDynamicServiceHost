@@ -4,32 +4,23 @@ using Xunit;
 
 namespace DynamicServiceHost.Host.Tests.TestTypes
 {
-    public class SimpleContractServiceMock : ISimpleContract
+    internal class InvokeCounter
     {
-        private readonly List<Tuple<string, object[]>> invokationInformation;
+        private readonly IList<Tuple<string, object[]>> invokationInformation;
 
-        public SimpleContractServiceMock()
+        public InvokeCounter()
         {
             invokationInformation = new List<Tuple<string, object[]>>();
         }
 
-        public void DoSomething()
+        public void AddInvokation(string methodName, params object[] @params)
         {
-            var invokationInfo = new Tuple<string, object[]>(nameof(DoSomething), new object[0]);
+            var invokationInfo = new Tuple<string, object[]>(methodName, @params);
 
             invokationInformation.Add(invokationInfo);
         }
 
-        public string DoSomethingString()
-        {
-            var invokationInfo = new Tuple<string, object[]>(nameof(DoSomethingString), new object[0]);
-
-            invokationInformation.Add(invokationInfo);
-
-            return "Done";
-        }
-
-        internal void AssertInvokation(string methodName, object[] methodParams)
+        internal void AssertInvokation(string methodName, params object[] methodParams)
         {
             Assert.Single(invokationInformation);
 

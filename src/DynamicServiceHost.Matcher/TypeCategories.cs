@@ -5,5 +5,6 @@
         Interface,
         Class,
         Dto,
+        Implementation,
     }
 }

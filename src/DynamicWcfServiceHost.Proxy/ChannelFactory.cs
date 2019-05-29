@@ -1,4 +1,5 @@
-﻿using DynamicWcfServiceHost.Shared.Factories;
+﻿using DynamicWcfServiceHost.Shared.DGenRequirements;
+using DynamicWcfServiceHost.Shared.Factories;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
@@ -8,20 +9,56 @@ namespace DynamicWcfServiceHost.Proxy
 {
     public class ChannelFactory
     {
-        public static object CreateConnectedChannel(Type serviceType)
+        public static object CreateConnectedChannel(Type serviceType, int? arbitaryPort = null, Type invoker = null)
         {
-            var connectedServiceType = CreateEquivalentConnectedType(serviceType);
+            invoker = invoker ?? typeof(DefaultInvoker);
 
+            var connectedServicePack = CreateEquivalentConnectedType(serviceType);
+
+            var connectedServiceTypeWrapper = CreateEquivalentWrapperConnectedType(serviceType,
+                new Dictionary<string, Type>
+                {
+                    {"connectedServiceType", connectedServicePack.MatchType},
+                });
+
+            var connectedServiceObject = CreateDefaultChannel(arbitaryPort, connectedServicePack.MatchType);
+
+            var defaultEvluatorObject = CreateDefaultInvoker(invoker, connectedServicePack);
+
+            var returnObject = CreateReturnObject(connectedServiceTypeWrapper, defaultEvluatorObject, connectedServiceObject);
+
+            return returnObject;
+        }
+
+        private static object CreateDefaultInvoker(Type invoker, ServicePack servicePack)
+        {
+            var invokerTypeMapper = new DefaultInvokerMapper(servicePack);
+
+            return Evaluator<DefaultInvoker>.CreateDefaultEvaluator(invoker, invokerTypeMapper);
+        }
+
+        private static object CreateReturnObject(Type connectedServiceTypeWrapper, object defaultEvluatorObject, object connectedServiceObject)
+        {
+            var wrapper = Activator.CreateInstance(connectedServiceTypeWrapper,
+                new[] {defaultEvluatorObject, connectedServiceObject, null});
+
+            return wrapper;
+        }
+
+        private static object CreateDefaultChannel(int? arbitaryPort, Type connectedServiceType)
+        {
             var notSetType = typeof(ChannelFactory<>);
 
             var setType = notSetType.MakeGenericType(connectedServiceType);
 
-            var createChannelMethod = setType.GetMethod("CreateChannel", new Type[] { typeof(Type) });
+            var createChannelMethod = setType.GetMethod("CreateChannel", new Type[] { typeof(Type), typeof(int?) });
 
-            return createChannelMethod.Invoke(null, new[] { connectedServiceType });
+            var connectedServiceObject = createChannelMethod.Invoke(null, new object[] { connectedServiceType, arbitaryPort });
+
+            return connectedServiceObject;
         }
 
-        private static Type CreateEquivalentConnectedType(Type contractType)
+        private static ServicePack CreateEquivalentConnectedType(Type contractType)
         {
             var onTypeAttributes = CreateOnTypeConnectedAttributes();
             var forAllmembersAttributes = CreateForAllmembersConnectedAttributes();
@@ -34,7 +71,16 @@ namespace DynamicWcfServiceHost.Proxy
                 onType: onTypeAttributes,
                 forAllmembers: forAllmembersAttributes,
                 forAllInvolvedTypes: forAllInvolvedTypesAttributes,
-                forAllInvolvedTypeMembers: forAllInvolvedTypeMembersAttributes)
+                forAllInvolvedTypeMembers: forAllInvolvedTypeMembersAttributes);
+        }
+
+        private static Type CreateEquivalentWrapperConnectedType(Type contractType, IDictionary<string, Type> extraCtorParams)
+        {
+            return TypeFactory.CreateImplementationServicePack(
+                    type: contractType,
+                    typePostfix: "_Wrapper",
+                    extraCtorParams: extraCtorParams,
+                    @interface: contractType)
                 .MatchType;
         }
 

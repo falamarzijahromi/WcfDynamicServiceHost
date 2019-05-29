@@ -31,8 +31,16 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DynamicTypeGenerator, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\DynamicTypeGenerator.1.0.2.2\lib\net35\DynamicTypeGenerator.dll</HintPath>
+    </Reference>
+    <Reference Include="Mapster, Version=4.0.0.0, Culture=neutral, PublicKeyToken=2f39883af23c29a8, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mapster.4.0.0\lib\net45\Mapster.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -42,16 +50,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Abstracts\IInvoker.cs" />
+    <Compile Include="Abstracts\IInvokerTypeMapper.cs" />
+    <Compile Include="DGenRequirements\DefaultInvoker.cs" />
+    <Compile Include="DGenRequirements\DefaultInvokerMapper.cs" />
+    <Compile Include="DGenRequirements\Evaluator.cs" />
+    <Compile Include="DGenRequirements\ArgInfo.cs" />
+    <Compile Include="DGenRequirements\InvokationContext.cs" />
     <Compile Include="Factories\AttributePack.cs" />
     <Compile Include="Factories\TypeFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SharedServicePack.cs" />
+    <Compile Include="DGenRequirements\ServicePack.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DynamicServiceHost.Matcher\DynamicServiceHost.Matcher.csproj">
       <Project>{38D2FB16-9D44-4CC1-A26C-11FC1CE49356}</Project>
       <Name>DynamicServiceHost.Matcher</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

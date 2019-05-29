@@ -1,12 +1,12 @@
 ﻿using DynamicServiceHost.Host.Abstracts;
-using DynamicServiceHost.Host.DGenRequirements;
 using DynamicServiceHost.Host.WcfRequirements;
+using DynamicWcfServiceHost.Shared.Factories;
+using DynamicWcfServiceHost.Shared.DGenRequirements;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.ServiceModel;
-using DynamicTypeGenerator.Abstracts;
-using DynamicWcfServiceHost.Shared.Factories;
+using DynamicWcfServiceHost.Shared.Abstracts;
 
 namespace DynamicServiceHost.Host
 {
@@ -14,15 +14,15 @@ namespace DynamicServiceHost.Host
     {
         private ServiceHost connectedHost;
 
-        public DynamicHost(Type serviceType, IHostContainer container, Type invokerType = null)
+        public DynamicHost(Type serviceType, IHostContainer container, Type invokerType = null, int? port = null)
         {
-            invokerType = invokerType ?? typeof(DefaultHostInvoker);
+            invokerType = invokerType ?? typeof(DefaultInvoker);
 
-            var connectedServiceType = CreateEquivalentConnectedType(serviceType);
+            var connectedServicePack = CreateEquivalentConnectedType(serviceType);
 
-            CreateIocHosts(container, connectedServiceType);
+            CreateIocHosts(container, connectedServicePack.MatchType, port);
 
-            RegisterInvokerToContainer(container, invokerType);
+            RegisterInvokerToContainer(container, invokerType, connectedServicePack);
         }
 
         public void Dispose()
@@ -35,25 +35,28 @@ namespace DynamicServiceHost.Host
             connectedHost.Open();
         }
 
-        private void CreateIocHosts(IHostContainer container, Type serviceType)
+        private void CreateIocHosts(IHostContainer container, Type serviceType, int? port)
         {
             var instanceProvider = new HostInstanceProvider(container);
 
             var behavior = new HostInstanceProviderBehavior(instanceProvider);
 
-            connectedHost = new IocServiceHost(serviceType, behavior);
+            connectedHost = new IocServiceHost(serviceType, behavior, port);
         }
 
-        private void RegisterInvokerToContainer(IHostContainer container, Type invokerType)
+        private void RegisterInvokerToContainer(IHostContainer container, Type invokerType, ServicePack connectedServicePack)
         {
-            var nonSetEvaluatorType = typeof(Evaluator<>);
+            var invokerSetType = Evaluator<DefaultInvoker>.CreateDefaultEvaluatorType(invokerType);
 
-            var setEvaluatorType = nonSetEvaluatorType.MakeGenericType(new[] { invokerType });
+            var invokationEvaluatorType = Evaluator<DefaultInvoker>.GetInvokationEvaluatorType();
 
-            container.RegisterTransient(typeof(IInvokationEvaluator), setEvaluatorType);
+            var typeMapper = new DefaultInvokerMapper(connectedServicePack);
+
+            container.RegisterTransient(invokationEvaluatorType, invokerSetType);
+            container.RegisterSingleton<IInvokerTypeMapper>(typeMapper);
         }
 
-        private Type CreateEquivalentConnectedType(Type contractType)
+        private ServicePack CreateEquivalentConnectedType(Type contractType)
         {
             var onTypeAttributes = CreateOnTypeConnectedAttributes();
             var forAllmembersAttributes = CreateForAllmembersConnectedAttributes();
@@ -66,8 +69,7 @@ namespace DynamicServiceHost.Host
                 onType: onTypeAttributes,
                 forAllmembers: forAllmembersAttributes,
                 forAllInvolvedTypes: forAllInvolvedTypesAttributes,
-                forAllInvolvedTypeMembers: forAllInvolvedTypeMembersAttributes)
-                .MatchType;
+                forAllInvolvedTypeMembers: forAllInvolvedTypeMembersAttributes);
         }
 
         private static List<AttributePack> CreateForAllInvolvedTypeMembersConnectedAttributes()

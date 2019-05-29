@@ -12,18 +12,24 @@ namespace DynamicServiceHost.Matcher
         private readonly Type targetType;
         private readonly TypeCategories typeCategory;
         private readonly string namePostfix;
-
+        private readonly IDictionary<string, Type> ctorExtraParamsType;
+        private readonly Type @interface;
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> typeAttributes;
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> allMembersAttributes;
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> involvedAttributes;
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> involvedTypeMembersAttributes;
 
-        public ServiceMatcher(Type targetType, TypeCategories typeCategory, string namePostfix = null)
+        public ServiceMatcher(
+            Type targetType, TypeCategories typeCategory,
+            string namePostfix = null,
+            IDictionary<string, Type> ctorExtraParamsType = null,
+            Type @interface = null)
         {
             this.targetType = targetType;
             this.typeCategory = typeCategory;
             this.namePostfix = namePostfix ?? string.Empty;
-
+            this.ctorExtraParamsType = ctorExtraParamsType ?? new Dictionary<string, Type>();
+            this.@interface = @interface;
             typeAttributes = new List<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>>();
             allMembersAttributes = new List<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>>();
 
@@ -75,18 +81,24 @@ namespace DynamicServiceHost.Matcher
 
         private IDynamicTypeBuilder CreateDynamicTypeBuilder()
         {
+            var ctorParams = new Dictionary<string, Type>(ctorExtraParamsType)
+            {
+                {"contractedService", targetType}
+            };
+
             switch (typeCategory)
             {
                 case TypeCategories.Class:
-                    return DynamicTypeBuilderFactory.CreateClassBuilder(
-                        $"{targetType.Name}{namePostfix}",
-                        new Dictionary<string, Type> { { "contractedService", targetType } });
-
+                    return DynamicTypeBuilderFactory.CreateClassBuilder($"{targetType.Name}{namePostfix}", ctorParams);
                 case TypeCategories.Dto:
                     return DynamicTypeBuilderFactory.CreateDtoBuilder($"{targetType.Name}{namePostfix}");
 
                 case TypeCategories.Interface:
                     return DynamicTypeBuilderFactory.CreateInterfaceBuilder($"{targetType.Name}{namePostfix}");
+
+                case TypeCategories.Implementation:
+                    return DynamicTypeBuilderFactory.CreateClassBuilder($"{targetType.Name}{namePostfix}", @interface,
+                        ctorParams);
 
                 default:
                     throw new Exception();
@@ -95,11 +107,14 @@ namespace DynamicServiceHost.Matcher
 
         private void BuildMatchType(IDynamicTypeBuilder typeBuilder, ServicePack retPack)
         {
-            SetAttributes_Type(typeBuilder, typeAttributes);
+            SetAttributes(typeBuilder, typeAttributes);
 
-            SetProperties(typeBuilder, retPack, targetType);
+            if (typeCategory != TypeCategories.Implementation)
+            {
+                SetProperties(typeBuilder, retPack, targetType);
 
-            SetMethods(typeBuilder, retPack);
+                SetMethods(typeBuilder, retPack); 
+            }
         }
 
         private void SetMethods(IDynamicTypeBuilder typeBuilder, ServicePack retPack)
@@ -138,7 +153,7 @@ namespace DynamicServiceHost.Matcher
             {
                 var matchParamType = MapType(param.ParameterType, retPack);
 
-                methodBuilder.SetParameter(matchParamType);
+                methodBuilder.SetParameter(matchParamType, param.Name);
             }
         }
 
@@ -177,9 +192,8 @@ namespace DynamicServiceHost.Matcher
                 matchType = retPack.RelatedTypes.Single(kVT => kVT.Value.Equals(type)).Key;
             }
 
-            Type typeToMap = null;
 
-            if (matchType == null && CheckMapPossiblity(type, out typeToMap))
+            if (matchType == null && CheckMapPossiblity(type, out Type typeToMap))
             {
                 var propMatcher = new ServiceMatcher(typeToMap, TypeCategories.Dto);
 
@@ -274,9 +288,8 @@ namespace DynamicServiceHost.Matcher
 
             foreach (var prop in props)
             {
-                Type typeToMap = null;
 
-                if (CheckMapPossiblity(prop.PropertyType, out typeToMap))
+                if (CheckMapPossiblity(prop.PropertyType, out Type typeToMap))
                 {
                     MapType(typeToMap, retPack);
                 }
@@ -298,16 +311,6 @@ namespace DynamicServiceHost.Matcher
             foreach (var attribute in attTuples)
             {
                 attributeSetter.SetAttribute(attribute.Item1, attribute.Item2, attribute.Item3);
-            }
-        }
-
-        private void SetAttributes_Type(
-            IDynamicTypeBuilder typeBuilder,
-            IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> attTuples)
-        {
-            foreach (var attribute in attTuples)
-            {
-                typeBuilder.SetAttribute(attribute.Item1, attribute.Item2, attribute.Item3);
             }
         }
     }

@@ -32,7 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DynamicTypeGenerator, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\DynamicTypeGenerator.1.0.0.1\lib\net35\DynamicTypeGenerator.dll</HintPath>
+      <HintPath>..\packages\DynamicTypeGenerator.1.0.2.2\lib\net35\DynamicTypeGenerator.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -46,12 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DGenRequirements\DefaultHostInvoker.cs" />
-    <Compile Include="DGenRequirements\HostArgInfo.cs" />
-    <Compile Include="DGenRequirements\HostInvokationContext.cs" />
     <Compile Include="Abstracts\IHostContainer.cs" />
-    <Compile Include="Abstracts\IHostInvoker.cs" />
-    <Compile Include="DGenRequirements\Evaluator.cs" />
     <Compile Include="DynamicHost.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WcfRequirements\IocServiceHost.cs" />
@@ -59,13 +54,14 @@
     <Compile Include="WcfRequirements\HostInstanceProviderBehavior.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\DynamicWcfServiceHost.Shared\DynamicWcfServiceHost.Shared.csproj">
       <Project>{413A2837-01B8-4907-8AFC-00B4B69E67BF}</Project>
       <Name>DynamicWcfServiceHost.Shared</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using DynamicServiceHost.Matcher;
 
-namespace DynamicWcfServiceHost.Shared
+namespace DynamicWcfServiceHost.Shared.DGenRequirements
 {
-    public class SharedServicePack
+    public class ServicePack
     {
         public Type MatchType { get; private set; }
         public Dictionary<Type, Type> RelatedTypes { get; private set; }
 
-        public static implicit operator SharedServicePack(ServicePack pack)
+        public static implicit operator ServicePack(DynamicServiceHost.Matcher.ServicePack pack)
         {
-            return new SharedServicePack
+            return new ServicePack
             {
                 MatchType = pack.MatchType,
                 RelatedTypes = pack.RelatedTypes,

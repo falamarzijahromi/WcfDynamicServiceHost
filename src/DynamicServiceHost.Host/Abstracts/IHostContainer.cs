@@ -6,6 +6,8 @@ namespace DynamicServiceHost.Host.Abstracts
     {
         void RegisterTransient(Type from, Type to);
 
+        void RegisterSingleton<T>(T instance);
+
         object Resolve(Type type);
     }
 }

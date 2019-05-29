@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicWcfServiceHost.Proxy
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicWcfServiceHost.Shared", "DynamicWcfServiceHost.Shared\DynamicWcfServiceHost.Shared.csproj", "{413A2837-01B8-4907-8AFC-00B4B69E67BF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{0F9FA4B3-B8AB-463F-A5D3-F87F41F6D811}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,6 +50,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7B8F5808-A3C6-45A9-A6BC-A366D63D902C} = {0F9FA4B3-B8AB-463F-A5D3-F87F41F6D811}
+		{6C23A639-05C0-4068-8AA0-63701E0688CC} = {0F9FA4B3-B8AB-463F-A5D3-F87F41F6D811}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C1AD8443-4BBF-438B-9B5B-5DCEDB63F99D}

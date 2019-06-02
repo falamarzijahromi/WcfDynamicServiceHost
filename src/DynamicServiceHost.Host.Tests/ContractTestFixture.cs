@@ -1,8 +1,9 @@
 ﻿using DynamicServiceHost.Host.Abstracts;
 using DynamicServiceHost.Host.Tests.TestTypes;
+using DynamicServiceHost.Host.Tests.TestTypes.Abstracts;
 using DynamicWcfServiceHost.Proxy;
 using System;
-using DynamicServiceHost.Host.Tests.TestTypes.Abstracts;
+using System.Transactions;
 
 namespace DynamicServiceHost.Host.Tests
 {
@@ -43,11 +44,20 @@ namespace DynamicServiceHost.Host.Tests
 
         protected object CallOnProxy(Type contractType, string methodName, params object[] @params)
         {
+            object retObj = null;
+
             var channel = ChannelFactory.CreateConnectedChannel(contractType, arbitaryPort);
 
             var method = channel.GetType().GetMethod(methodName);
 
-            return method.Invoke(channel, @params);
+            using (var trxScope = new TransactionScope(TransactionScopeOption.RequiresNew))
+            {
+                retObj = method.Invoke(channel, @params);
+
+                trxScope.Complete();
+            }
+
+            return retObj;
         }
 
         protected abstract void RegisterRequiredTypes(TestContainer container);

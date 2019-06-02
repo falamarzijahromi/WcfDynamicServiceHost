@@ -1,12 +1,13 @@
 ﻿using DynamicServiceHost.Host.Abstracts;
 using DynamicServiceHost.Host.WcfRequirements;
-using DynamicWcfServiceHost.Shared.Factories;
+using DynamicWcfServiceHost.Shared.Abstracts;
 using DynamicWcfServiceHost.Shared.DGenRequirements;
+using DynamicWcfServiceHost.Shared.Factories;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.ServiceModel;
-using DynamicWcfServiceHost.Shared.Abstracts;
+using System.Transactions;
 
 namespace DynamicServiceHost.Host
 {
@@ -99,9 +100,23 @@ namespace DynamicServiceHost.Host
             return new List<AttributePack>
             {
                 new AttributePack(
-                    attributeType: typeof(OperationContractAttribute),
-                    ctorParamsMapping: new Dictionary<Type, object>(),
-                    propsValuesMapping: new Dictionary<string, object>()),
+                    attributeType: typeof(OperationContractAttribute)),
+
+                new AttributePack(
+                    attributeType: typeof(OperationBehaviorAttribute),
+                    propsValuesMapping: new Dictionary<string, object>
+                    {
+                        { nameof(OperationBehaviorAttribute.TransactionAutoComplete), true },
+                        { nameof(OperationBehaviorAttribute.TransactionScopeRequired), true},
+                        { nameof(OperationBehaviorAttribute.ReleaseInstanceMode), ReleaseInstanceMode.None},
+                    }),
+
+                new AttributePack(
+                    attributeType: typeof(TransactionFlowAttribute),
+                    ctorParamsMapping: new Dictionary<Type, object>
+                    {
+                        {typeof(TransactionFlowOption), TransactionFlowOption.Mandatory }
+                    }),
             };
         }
 
@@ -111,8 +126,22 @@ namespace DynamicServiceHost.Host
             {
                 new AttributePack(
                     attributeType: typeof(ServiceContractAttribute),
-                    ctorParamsMapping: new Dictionary<Type, object>(),
-                    propsValuesMapping: new Dictionary<string, object>()),
+                    propsValuesMapping: new Dictionary<string, object>
+                    {
+                        { nameof(ServiceContractAttribute.SessionMode), SessionMode.Required},
+                    }),
+
+                new AttributePack(
+                    attributeType: typeof(ServiceBehaviorAttribute),
+                    propsValuesMapping: new Dictionary<string, object>
+                    {
+                        { nameof(ServiceBehaviorAttribute.TransactionAutoCompleteOnSessionClose), false},
+                        { nameof(ServiceBehaviorAttribute.TransactionIsolationLevel), IsolationLevel.Serializable},
+                        { nameof(ServiceBehaviorAttribute.ReleaseServiceInstanceOnTransactionComplete), true},
+                        { nameof(ServiceBehaviorAttribute.ConcurrencyMode), ConcurrencyMode.Single},
+                        { nameof(ServiceBehaviorAttribute.InstanceContextMode), InstanceContextMode.PerSession},
+                        { nameof(ServiceBehaviorAttribute.EnsureOrderedDispatch), true},
+                    }),
             };
         }
     }

@@ -111,9 +111,14 @@ namespace DynamicWcfServiceHost.Proxy
             return new List<AttributePack>
             {
                 new AttributePack(
-                    attributeType: typeof(OperationContractAttribute),
-                    ctorParamsMapping: new Dictionary<Type, object>(),
-                    propsValuesMapping: new Dictionary<string, object>()),
+                    attributeType: typeof(OperationContractAttribute)),
+
+                new AttributePack(
+                    attributeType: typeof(TransactionFlowAttribute),
+                    ctorParamsMapping: new Dictionary<Type, object>
+                    {
+                        {typeof(TransactionFlowOption), TransactionFlowOption.Mandatory }
+                    }),
             };
         }
 
@@ -123,8 +128,10 @@ namespace DynamicWcfServiceHost.Proxy
             {
                 new AttributePack(
                     attributeType: typeof(ServiceContractAttribute),
-                    ctorParamsMapping: new Dictionary<Type, object>(),
-                    propsValuesMapping: new Dictionary<string, object>()),
+                    propsValuesMapping: new Dictionary<string, object>
+                    {
+                        { nameof(ServiceContractAttribute.SessionMode), SessionMode.Required},
+                    }),
             };
         }
     }

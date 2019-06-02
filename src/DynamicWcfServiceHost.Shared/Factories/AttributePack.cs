@@ -7,12 +7,12 @@ namespace DynamicWcfServiceHost.Shared.Factories
     {
         public AttributePack(
             Type attributeType, 
-            IDictionary<Type, object> ctorParamsMapping, 
-            IDictionary<string, object> propsValuesMapping)
+            IDictionary<Type, object> ctorParamsMapping = null, 
+            IDictionary<string, object> propsValuesMapping = null)
         {
             AttributeType = attributeType;
-            CtorParamsMapping = ctorParamsMapping;
-            PropsValuesMapping = propsValuesMapping;
+            CtorParamsMapping = ctorParamsMapping ?? new Dictionary<Type, object>();
+            PropsValuesMapping = propsValuesMapping ?? new Dictionary<string, object>();
         }
 
         public Type AttributeType { get; }

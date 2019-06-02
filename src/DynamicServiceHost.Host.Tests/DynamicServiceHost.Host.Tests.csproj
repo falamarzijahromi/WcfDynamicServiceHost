@@ -74,14 +74,17 @@
     <Compile Include="ContractTestFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SimpleContractTests.cs" />
-    <Compile Include="TestTypes\ComplexServiceMock.cs" />
-    <Compile Include="TestTypes\IAssertor.cs" />
-    <Compile Include="TestTypes\IComplexContract.cs" />
+    <Compile Include="TestTypes\Implementations\ComplexServiceMock.cs" />
+    <Compile Include="TestTypes\Abstracts\IAssertor.cs" />
+    <Compile Include="TestTypes\Abstracts\IComplexContract.cs" />
+    <Compile Include="TestTypes\Implementations\VeryComplexServiceMock.cs" />
     <Compile Include="TestTypes\InvokeCounter.cs" />
-    <Compile Include="TestTypes\ISimpleContract.cs" />
-    <Compile Include="TestTypes\SimpleContractMock.cs" />
+    <Compile Include="TestTypes\Abstracts\ISimpleContract.cs" />
+    <Compile Include="TestTypes\Implementations\SimpleContractMock.cs" />
     <Compile Include="TestTypes\SimpleDto.cs" />
     <Compile Include="TestTypes\TestContainer.cs" />
+    <Compile Include="TestTypes\Abstracts\IVeryComplexContract.cs" />
+    <Compile Include="VeryComplexContractTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

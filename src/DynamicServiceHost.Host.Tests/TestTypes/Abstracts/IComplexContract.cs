@@ -1,4 +1,4 @@
-﻿namespace DynamicServiceHost.Host.Tests.TestTypes
+﻿namespace DynamicServiceHost.Host.Tests.TestTypes.Abstracts
 {
     public interface IComplexContract
     {

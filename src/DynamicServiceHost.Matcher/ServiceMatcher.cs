@@ -90,6 +90,7 @@ namespace DynamicServiceHost.Matcher
             {
                 case TypeCategories.Class:
                     return DynamicTypeBuilderFactory.CreateClassBuilder($"{targetType.Name}{namePostfix}", ctorParams);
+
                 case TypeCategories.Dto:
                     return DynamicTypeBuilderFactory.CreateDtoBuilder($"{targetType.Name}{namePostfix}");
 
@@ -113,7 +114,7 @@ namespace DynamicServiceHost.Matcher
             {
                 SetProperties(typeBuilder, retPack, targetType);
 
-                SetMethods(typeBuilder, retPack); 
+                SetMethods(typeBuilder, retPack);
             }
         }
 
@@ -192,9 +193,8 @@ namespace DynamicServiceHost.Matcher
                 matchType = retPack.RelatedTypes.Single(kVT => kVT.Value.Equals(type)).Key;
             }
 
-            Type typeToMap;
 
-            if (matchType == null && CheckMapPossiblity(type, out typeToMap))
+            if (matchType == null && CheckMapPossiblity(type, out Type typeToMap))
             {
                 var propMatcher = new ServiceMatcher(typeToMap, TypeCategories.Dto);
 
@@ -209,7 +209,33 @@ namespace DynamicServiceHost.Matcher
                 AddRelatedTypesToRetPack(retPack, propServicePack);
             }
 
+            matchType = WrapForArraysOrGenerics(type, retPack, matchType);
+
             return matchType ?? type;
+        }
+
+        private Type WrapForArraysOrGenerics(Type type, ServicePack retPack, Type matchType)
+        {
+            Type retType = null;
+
+            if (type.IsGenericType)
+            {
+                var typeToWrap = matchType ?? type.GetGenericArguments()[0];
+                retType = type.GetGenericTypeDefinition().MakeGenericType(new[] { typeToWrap });
+            }
+
+            if (type.IsArray)
+            {
+                var typeToWrap = matchType ?? type.GetElementType();
+                retType = typeToWrap.MakeArrayType();
+            }
+
+            if (matchType != null && retType != null)
+            {
+                retPack.AddRelatedType(retType, type);
+            }
+
+            return retType;
         }
 
         private void SetInvolvedTypeMembersAttributes(ServiceMatcher propMatcher)
@@ -290,9 +316,8 @@ namespace DynamicServiceHost.Matcher
             foreach (var prop in props)
             {
 
-                Type typeToMap;
 
-                if (CheckMapPossiblity(prop.PropertyType, out typeToMap))
+                if (CheckMapPossiblity(prop.PropertyType, out Type typeToMap))
                 {
                     MapType(typeToMap, retPack);
                 }

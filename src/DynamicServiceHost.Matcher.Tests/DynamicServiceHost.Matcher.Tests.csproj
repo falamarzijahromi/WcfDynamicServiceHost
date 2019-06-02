@@ -57,12 +57,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GenericArgumentTests.cs" />
     <Compile Include="InterfaceServicePackerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReflectionHelper.cs" />
     <Compile Include="DtoServicePackerTests.cs" />
     <Compile Include="TestTypes\ComplexDto.cs" />
     <Compile Include="TestTypes\IComplexInterface.cs" />
+    <Compile Include="TestTypes\IGenericReturn.cs" />
     <Compile Include="TestTypes\ISimpleInterface.cs" />
     <Compile Include="TestTypes\SimpleDto.cs" />
     <Compile Include="TestTypes\SimpleDto2.cs" />

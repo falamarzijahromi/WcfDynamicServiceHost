@@ -1,4 +1,6 @@
-﻿namespace DynamicServiceHost.Host.Tests.TestTypes
+﻿using DynamicServiceHost.Host.Tests.TestTypes.Abstracts;
+
+namespace DynamicServiceHost.Host.Tests.TestTypes.Implementations
 {
     public class SimpleContractMock : ISimpleContract, IAssertor
     {

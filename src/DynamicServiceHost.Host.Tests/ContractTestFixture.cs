@@ -2,6 +2,7 @@
 using DynamicServiceHost.Host.Tests.TestTypes;
 using DynamicWcfServiceHost.Proxy;
 using System;
+using DynamicServiceHost.Host.Tests.TestTypes.Abstracts;
 
 namespace DynamicServiceHost.Host.Tests
 {

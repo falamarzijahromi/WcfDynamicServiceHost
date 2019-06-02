@@ -36,10 +36,9 @@ namespace DynamicWcfServiceHost.Shared.DGenRequirements
                 type != null &&
                 type.IsClass &&
                 !type.IsSealed &&
-                type.BaseType != null &&
-                !type.IsGenericType &&
-                !type.IsArray;
-
+                type.BaseType != null;// &&
+                //!type.IsGenericType &&
+                //!type.IsArray;
         }
     }
 }

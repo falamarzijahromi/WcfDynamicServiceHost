@@ -1,4 +1,6 @@
 ﻿using DynamicServiceHost.Host.Tests.TestTypes;
+using DynamicServiceHost.Host.Tests.TestTypes.Abstracts;
+using DynamicServiceHost.Host.Tests.TestTypes.Implementations;
 using Xunit;
 
 namespace DynamicServiceHost.Host.Tests

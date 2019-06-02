@@ -8,14 +8,27 @@ namespace DynamicServiceHost.Host.Tests.Scenarios
     public class SimpleContractTests : ContractTestFixture
     {
         [Fact]
-        public void Simple_Contract_Must_Be_Hosted_And_Invoked_Correctly()
+        public void Connected_Simple_Contract_Must_Be_Hosted_And_Invoked_Correctly()
         {
             var contractType = typeof(ISimpleContract);
             var methodNameToInvoke = nameof(ISimpleContract.DoSomethingString);
 
-            CreateOpenHost(contractType);
+            CreateOpenConnectedHost(contractType);
 
-            CallOnProxy(contractType, methodNameToInvoke);
+            CallOnConnectedProxy(contractType, methodNameToInvoke);
+
+            AssertInvokationOn(contractType, methodNameToInvoke);
+        }
+
+        [Fact]
+        public void Disconnected_Simple_Contract_Must_Be_Hosted_And_Invoked_Correctly()
+        {
+            var contractType = typeof(ISimpleContract);
+            var methodNameToInvoke = nameof(ISimpleContract.DoSomethingString);
+
+            CreateOpenDisconnectedHost(contractType);
+
+            CallOnDisconnectedProxy(contractType, methodNameToInvoke);
 
             AssertInvokationOn(contractType, methodNameToInvoke);
         }

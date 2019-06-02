@@ -6,13 +6,6 @@ namespace DynamicWcfServiceHost.Shared.DGenRequirements
 {
     public class DefaultInvokerMapper : IInvokerTypeMapper
     {
-        private readonly ServicePack servicePack;
-
-        public DefaultInvokerMapper(ServicePack servicePack)
-        {
-            this.servicePack = servicePack;
-        }
-
         public object Convert(object @object, Type from, Type to)
         {
             if (IsConvertable(from))

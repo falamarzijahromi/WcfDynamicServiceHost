@@ -13,23 +13,27 @@ namespace DynamicServiceHost.Matcher
         private readonly TypeCategories typeCategory;
         private readonly string namePostfix;
         private readonly IDictionary<string, Type> ctorExtraParamsType;
-        private readonly Type @interface;
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> typeAttributes;
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> allMembersAttributes;
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> involvedAttributes;
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> involvedTypeMembersAttributes;
+        private readonly Type[] interfaces;
+        private readonly bool allMethodsVoid;
 
         public ServiceMatcher(
             Type targetType, TypeCategories typeCategory,
             string namePostfix = null,
             IDictionary<string, Type> ctorExtraParamsType = null,
-            Type @interface = null)
+            bool allMethodsVoid = false,
+            params Type[] interfaces)
         {
+            this.allMethodsVoid = allMethodsVoid;
             this.targetType = targetType;
             this.typeCategory = typeCategory;
             this.namePostfix = namePostfix ?? string.Empty;
             this.ctorExtraParamsType = ctorExtraParamsType ?? new Dictionary<string, Type>();
-            this.@interface = @interface;
+            this.interfaces = interfaces;
+
             typeAttributes = new List<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>>();
             allMembersAttributes = new List<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>>();
 
@@ -95,11 +99,10 @@ namespace DynamicServiceHost.Matcher
                     return DynamicTypeBuilderFactory.CreateDtoBuilder($"{targetType.Name}{namePostfix}");
 
                 case TypeCategories.Interface:
-                    return DynamicTypeBuilderFactory.CreateInterfaceBuilder($"{targetType.Name}{namePostfix}");
+                    return DynamicTypeBuilderFactory.CreateInterfaceBuilder($"{targetType.Name}{namePostfix}", interfaces);
 
                 case TypeCategories.Implementation:
-                    return DynamicTypeBuilderFactory.CreateClassBuilder($"{targetType.Name}{namePostfix}", @interface,
-                        ctorParams);
+                    return DynamicTypeBuilderFactory.CreateClassBuilder($"{targetType.Name}{namePostfix}", ctorParams, interfaces);
 
                 default:
                     throw new Exception();
@@ -160,9 +163,12 @@ namespace DynamicServiceHost.Matcher
 
         private void SetMethodReturnType(ServicePack retPack, MethodInfo method, IDynamicMethodBuilder methodBuilder)
         {
-            var matchReturnType = MapType(method.ReturnType, retPack);
+            if (!allMethodsVoid)
+            {
+                var matchReturnType = MapType(method.ReturnType, retPack);
 
-            methodBuilder.SetReturnType(matchReturnType);
+                methodBuilder.SetReturnType(matchReturnType);
+            }
         }
 
         private void SetProperties(IDynamicTypeBuilder typeBuilder, ServicePack retPack, Type type)

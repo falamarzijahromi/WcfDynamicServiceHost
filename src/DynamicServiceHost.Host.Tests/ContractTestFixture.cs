@@ -3,6 +3,7 @@ using DynamicServiceHost.Host.Tests.TestTypes;
 using DynamicServiceHost.Host.Tests.TestTypes.Abstracts;
 using DynamicWcfServiceHost.Proxy;
 using System;
+using System.Threading;
 using System.Transactions;
 
 namespace DynamicServiceHost.Host.Tests
@@ -27,11 +28,23 @@ namespace DynamicServiceHost.Host.Tests
             return container;
         }
 
-        protected void CreateOpenHost(Type contractType)
+        protected void CreateOpenConnectedHost(Type contractType)
         {
             arbitaryPort = new Random(5000).Next(5000, 7000);
 
-            host = new DynamicHost(contractType, container, port: arbitaryPort);
+            host = new DynamicHost(contractType, container);
+
+            host.CreateConnectedHost(arbitaryPort);
+
+            host.Open();
+        }
+
+        protected void CreateOpenDisconnectedHost(Type contractType)
+        {
+            host = new DynamicHost(contractType, container);
+
+            host.CreateDisconnectedHost();
+
             host.Open();
         }
 
@@ -42,11 +55,13 @@ namespace DynamicServiceHost.Host.Tests
             service.AssertInvokation(methodName, methodParams);
         }
 
-        protected object CallOnProxy(Type contractType, string methodName, params object[] @params)
+        protected object CallOnConnectedProxy(Type contractType, string methodName, params object[] @params)
         {
             object retObj = null;
 
-            var channel = ChannelFactory.CreateConnectedChannel(contractType, arbitaryPort);
+            var channelFactory = new ChannelFactory(contractType);
+
+            var channel = channelFactory.CreateConnectedChannel(arbitaryPort);
 
             var method = channel.GetType().GetMethod(methodName);
 
@@ -54,10 +69,38 @@ namespace DynamicServiceHost.Host.Tests
             {
                 retObj = method.Invoke(channel, @params);
 
+                if (channel is IDisposable)
+                {
+                    ((IDisposable)channel).Dispose();
+                }
+
+                trxScope.Complete();
+             }
+
+            return retObj;
+        }
+
+        protected void CallOnDisconnectedProxy(Type contractType, string methodName, params object[] @params)
+        {
+            var channelFactory = new ChannelFactory(contractType);
+
+            var channel = channelFactory.CreateDisconnectedChannel();
+
+            var method = channel.GetType().GetMethod(methodName);
+
+            using (var trxScope = new TransactionScope(TransactionScopeOption.RequiresNew))
+            {
+                method.Invoke(channel, @params);
+
+                if (channel is IDisposable)
+                {
+                    ((IDisposable)channel).Dispose();
+                }
+
                 trxScope.Complete();
             }
 
-            return retObj;
+            Thread.Sleep(1000);
         }
 
         protected abstract void RegisterRequiredTypes(TestContainer container);

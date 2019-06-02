@@ -4,145 +4,129 @@ using DynamicWcfServiceHost.Shared.Abstracts;
 using DynamicWcfServiceHost.Shared.DGenRequirements;
 using DynamicWcfServiceHost.Shared.Factories;
 using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
+using System.Messaging;
 using System.ServiceModel;
-using System.Transactions;
 
 namespace DynamicServiceHost.Host
 {
     public class DynamicHost : IDisposable
     {
         private ServiceHost connectedHost;
+        private ServiceHost disconnectedHost;
 
-        public DynamicHost(Type serviceType, IHostContainer container, Type invokerType = null, int? port = null)
+        private const string connectedPostFix = "_Connected";
+        private const string disconnectedPostFix = "_Disconnected";
+
+        private readonly Type serviceType;
+        private readonly IHostContainer container;
+
+        public DynamicHost(Type serviceType, IHostContainer container, Type invokerType = null)
         {
-            invokerType = invokerType ?? typeof(DefaultInvoker);
+            this.serviceType = serviceType;
+            this.container = container;
 
-            var connectedServicePack = CreateEquivalentConnectedType(serviceType);
-
-            CreateIocHosts(container, connectedServicePack.MatchType, port);
-
-            RegisterInvokerToContainer(container, invokerType, connectedServicePack);
+            RegisterInvokerToContainer(invokerType);
         }
 
         public void Dispose()
         {
             connectedHost.Close();
+            disconnectedHost.Close();
         }
 
         public void Open()
         {
-            connectedHost.Open();
+            connectedHost?.Open();
+            disconnectedHost?.Open();
         }
 
-        private void CreateIocHosts(IHostContainer container, Type serviceType, int? port)
+        public void CreateConnectedHost(int? port)
         {
-            var instanceProvider = new HostInstanceProvider(container);
+            var connectedServicePack = CreateEquivalentConnectedType(serviceType);
 
-            var behavior = new HostInstanceProviderBehavior(instanceProvider);
-
-            connectedHost = new IocServiceHost(serviceType, behavior, port);
+            connectedHost = CreateIocHosts(container, connectedServicePack.MatchType, port);
         }
 
-        private void RegisterInvokerToContainer(IHostContainer container, Type invokerType, ServicePack connectedServicePack)
+        public void CreateDisconnectedHost()
         {
-            var invokerSetType = Evaluator<DefaultInvoker>.CreateDefaultEvaluatorType(invokerType);
+            //AssureOnQueueExists(serviceType);
 
-            var invokationEvaluatorType = Evaluator<DefaultInvoker>.GetInvokationEvaluatorType();
+            var disconnectedServicePack = CreateEquivalentDisconnectedType(serviceType);
 
-            var typeMapper = new DefaultInvokerMapper(connectedServicePack);
+            disconnectedHost = CreateIocHosts(container, disconnectedServicePack.MatchType, null);
+        }
 
-            container.RegisterTransient(invokationEvaluatorType, invokerSetType);
-            container.RegisterSingleton<IInvokerTypeMapper>(typeMapper);
+
+        private void AssureOnQueueExists(Type serviceType)
+        {
+            var queueAddress = $@"localhost\Private$\{serviceType.Name}";
+
+            if (!MessageQueue.Exists(queueAddress))
+            {
+                var messageQueue = MessageQueue.Create(queueAddress, true);
+
+                messageQueue.Authenticate = false;
+                messageQueue.Label = queueAddress;
+
+                messageQueue.Refresh();
+                messageQueue.Close();
+            }
+        }
+
+        private ServicePack CreateEquivalentDisconnectedType(Type contractType)
+        {
+            var onTypeAttributes = WcfAttributeFactory.CreateOnTypeAttributes();
+            var forAllmembersAttributes = WcfAttributeFactory.CreateForAllmembersDisconnectedAttributes();
+            var forAllInvolvedTypesAttributes = WcfAttributeFactory.CreateForAllInvolvedTypesAttributes();
+            var forAllInvolvedTypeMembersAttributes = WcfAttributeFactory.CreateForAllInvolvedTypeMembersAttributes();
+
+            return TypeFactory.CreateClassServicePack(
+                type: contractType,
+                typePostfix: disconnectedPostFix,
+                onType: onTypeAttributes,
+                forAllmembers: forAllmembersAttributes,
+                forAllInvolvedTypes: forAllInvolvedTypesAttributes,
+                forAllInvolvedTypeMembers: forAllInvolvedTypeMembersAttributes,
+                allMethodsVoid: true);
         }
 
         private ServicePack CreateEquivalentConnectedType(Type contractType)
         {
-            var onTypeAttributes = CreateOnTypeConnectedAttributes();
-            var forAllmembersAttributes = CreateForAllmembersConnectedAttributes();
-            var forAllInvolvedTypesAttributes = CreateForAllInvolvedTypesConnectedAttributes();
-            var forAllInvolvedTypeMembersAttributes = CreateForAllInvolvedTypeMembersConnectedAttributes();
+            var onTypeAttributes = WcfAttributeFactory.CreateOnTypeAttributes();
+            var forAllmembersAttributes = WcfAttributeFactory.CreateForAllmembersConnectedAttributes();
+            var forAllInvolvedTypesAttributes = WcfAttributeFactory.CreateForAllInvolvedTypesAttributes();
+            var forAllInvolvedTypeMembersAttributes = WcfAttributeFactory.CreateForAllInvolvedTypeMembersAttributes();
 
             return TypeFactory.CreateClassServicePack(
                 type: contractType,
-                typePostfix: "_Connected",
+                typePostfix: connectedPostFix,
                 onType: onTypeAttributes,
                 forAllmembers: forAllmembersAttributes,
                 forAllInvolvedTypes: forAllInvolvedTypesAttributes,
                 forAllInvolvedTypeMembers: forAllInvolvedTypeMembersAttributes);
         }
 
-        private static List<AttributePack> CreateForAllInvolvedTypeMembersConnectedAttributes()
+        private ServiceHost CreateIocHosts(IHostContainer container, Type serviceType, int? port)
         {
-            return new List<AttributePack>
-            {
-                new AttributePack(
-                    attributeType: typeof(DataMemberAttribute),
-                    ctorParamsMapping: new Dictionary<Type, object>(),
-                    propsValuesMapping: new Dictionary<string, object>()),
-            };
+            var instanceProvider = new HostInstanceProvider(container);
+
+            var behavior = new HostInstanceProviderBehavior(instanceProvider);
+
+            return new IocServiceHost(serviceType, behavior, port);
         }
 
-        private static List<AttributePack> CreateForAllInvolvedTypesConnectedAttributes()
+        private void RegisterInvokerToContainer(Type invokerType)
         {
-            return new List<AttributePack>
-            {
-                new AttributePack(
-                    attributeType: typeof(DataContractAttribute),
-                    ctorParamsMapping: new Dictionary<Type, object>(),
-                    propsValuesMapping: new Dictionary<string, object>()),
-            };
-        }
+            invokerType = invokerType ?? typeof(DefaultInvoker);
 
-        private static List<AttributePack> CreateForAllmembersConnectedAttributes()
-        {
-            return new List<AttributePack>
-            {
-                new AttributePack(
-                    attributeType: typeof(OperationContractAttribute)),
+            var invokerSetType = Evaluator<DefaultInvoker>.CreateDefaultEvaluatorType(invokerType);
 
-                new AttributePack(
-                    attributeType: typeof(OperationBehaviorAttribute),
-                    propsValuesMapping: new Dictionary<string, object>
-                    {
-                        { nameof(OperationBehaviorAttribute.TransactionAutoComplete), true },
-                        { nameof(OperationBehaviorAttribute.TransactionScopeRequired), true},
-                        { nameof(OperationBehaviorAttribute.ReleaseInstanceMode), ReleaseInstanceMode.None},
-                    }),
+            var invokationEvaluatorType = Evaluator<DefaultInvoker>.GetInvokationEvaluatorType();
 
-                new AttributePack(
-                    attributeType: typeof(TransactionFlowAttribute),
-                    ctorParamsMapping: new Dictionary<Type, object>
-                    {
-                        {typeof(TransactionFlowOption), TransactionFlowOption.Mandatory }
-                    }),
-            };
-        }
+            var typeMapper = new DefaultInvokerMapper();
 
-        private static List<AttributePack> CreateOnTypeConnectedAttributes()
-        {
-            return new List<AttributePack>
-            {
-                new AttributePack(
-                    attributeType: typeof(ServiceContractAttribute),
-                    propsValuesMapping: new Dictionary<string, object>
-                    {
-                        { nameof(ServiceContractAttribute.SessionMode), SessionMode.Required},
-                    }),
-
-                new AttributePack(
-                    attributeType: typeof(ServiceBehaviorAttribute),
-                    propsValuesMapping: new Dictionary<string, object>
-                    {
-                        { nameof(ServiceBehaviorAttribute.TransactionAutoCompleteOnSessionClose), false},
-                        { nameof(ServiceBehaviorAttribute.TransactionIsolationLevel), IsolationLevel.Serializable},
-                        { nameof(ServiceBehaviorAttribute.ReleaseServiceInstanceOnTransactionComplete), true},
-                        { nameof(ServiceBehaviorAttribute.ConcurrencyMode), ConcurrencyMode.Single},
-                        { nameof(ServiceBehaviorAttribute.InstanceContextMode), InstanceContextMode.PerSession},
-                        { nameof(ServiceBehaviorAttribute.EnsureOrderedDispatch), true},
-                    }),
-            };
+            container.RegisterTransient(invokationEvaluatorType, invokerSetType);
+            container.RegisterSingleton<IInvokerTypeMapper>(typeMapper);
         }
     }
 }

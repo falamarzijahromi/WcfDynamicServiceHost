@@ -9,13 +9,23 @@ namespace DynamicWcfServiceHost.Proxy
 {
     public class ChannelFactory
     {
-        public static object CreateConnectedChannel(Type serviceType, int? arbitaryPort = null, Type invoker = null)
-        {
-            invoker = invoker ?? typeof(DefaultInvoker);
+        private const string connectedPostFix = "_Connected";
+        private const string disconnectedPostFix = "_Disconnected";
 
+        private readonly Type serviceType;
+        private readonly Type invoker;
+
+        public ChannelFactory(Type serviceType, Type invoker = null)
+        {
+            this.serviceType = serviceType;
+            this.invoker = invoker ?? typeof(DefaultInvoker);
+        }
+
+        public object CreateConnectedChannel(int? arbitaryPort = null)
+        {
             var connectedServicePack = CreateEquivalentConnectedType(serviceType);
 
-            var connectedServiceTypeWrapper = CreateEquivalentWrapperConnectedType(serviceType,
+            var connectedServiceTypeWrapper = CreateEquivalentWrapperType(serviceType,
                 new Dictionary<string, Type>
                 {
                     {"connectedServiceType", connectedServicePack.MatchType},
@@ -23,116 +33,101 @@ namespace DynamicWcfServiceHost.Proxy
 
             var connectedServiceObject = CreateDefaultChannel(arbitaryPort, connectedServicePack.MatchType);
 
-            var defaultEvluatorObject = CreateDefaultInvoker(invoker, connectedServicePack);
+            var defaultEvluatorObject = CreateDefaultInvoker(invoker);
 
             var returnObject = CreateReturnObject(connectedServiceTypeWrapper, defaultEvluatorObject, connectedServiceObject);
 
             return returnObject;
         }
 
-        private static object CreateDefaultInvoker(Type invoker, ServicePack servicePack)
+        public object CreateDisconnectedChannel()
         {
-            var invokerTypeMapper = new DefaultInvokerMapper(servicePack);
+            var disconnectedServicePack = CreateEquivalentDisconnectedType(serviceType);
+
+            var disconnectedServiceTypeWrapper = CreateEquivalentWrapperType(serviceType,
+                new Dictionary<string, Type>
+                {
+                    {"disconnectedServiceType", disconnectedServicePack.MatchType},
+                });
+
+            var connectedServiceObject = CreateDefaultChannel(null, disconnectedServicePack.MatchType);
+
+            var defaultEvluatorObject = CreateDefaultInvoker(invoker);
+
+            var returnObject = CreateReturnObject(disconnectedServiceTypeWrapper, defaultEvluatorObject, connectedServiceObject);
+
+            return returnObject;
+        }
+
+        private object CreateDefaultInvoker(Type invoker)
+        {
+            var invokerTypeMapper = new DefaultInvokerMapper();
 
             return Evaluator<DefaultInvoker>.CreateDefaultEvaluator(invoker, invokerTypeMapper);
         }
 
-        private static object CreateReturnObject(Type connectedServiceTypeWrapper, object defaultEvluatorObject, object connectedServiceObject)
+        private object CreateReturnObject(Type serviceTypeWrapper, object defaultEvluatorObject, object serviceObject)
         {
-            var wrapper = Activator.CreateInstance(connectedServiceTypeWrapper,
-                new[] {defaultEvluatorObject, connectedServiceObject, null});
+            var wrapper = Activator.CreateInstance(serviceTypeWrapper,
+                new[] { defaultEvluatorObject, serviceObject, null });
 
             return wrapper;
         }
 
-        private static object CreateDefaultChannel(int? arbitaryPort, Type connectedServiceType)
+        private object CreateDefaultChannel(int? arbitaryPort, Type serviceType)
         {
             var notSetType = typeof(ChannelFactory<>);
 
-            var setType = notSetType.MakeGenericType(connectedServiceType);
+            var setType = notSetType.MakeGenericType(serviceType);
 
             var createChannelMethod = setType.GetMethod("CreateChannel", new Type[] { typeof(Type), typeof(int?) });
 
-            var connectedServiceObject = createChannelMethod.Invoke(null, new object[] { connectedServiceType, arbitaryPort });
+            var connectedServiceObject = createChannelMethod.Invoke(null, new object[] { serviceType, arbitaryPort });
 
             return connectedServiceObject;
         }
 
-        private static ServicePack CreateEquivalentConnectedType(Type contractType)
+        private ServicePack CreateEquivalentConnectedType(Type contractType)
         {
-            var onTypeAttributes = CreateOnTypeConnectedAttributes();
-            var forAllmembersAttributes = CreateForAllmembersConnectedAttributes();
-            var forAllInvolvedTypesAttributes = CreateForAllInvolvedTypesConnectedAttributes();
-            var forAllInvolvedTypeMembersAttributes = CreateForAllInvolvedTypeMembersConnectedAttributes();
+            var onTypeAttributes = WcfAttributeFactory.CreateOnTypeAttributes();
+            var forAllmembersAttributes = WcfAttributeFactory.CreateForAllmembersConnectedAttributes();
+            var forAllInvolvedTypesAttributes = WcfAttributeFactory.CreateForAllInvolvedTypesAttributes();
+            var forAllInvolvedTypeMembersAttributes = WcfAttributeFactory.CreateForAllInvolvedTypeMembersAttributes();
 
             return TypeFactory.CreateInterfaceServicePack(
                 type: contractType,
-                typePostfix: "_Connected",
+                typePostfix: connectedPostFix,
                 onType: onTypeAttributes,
                 forAllmembers: forAllmembersAttributes,
                 forAllInvolvedTypes: forAllInvolvedTypesAttributes,
                 forAllInvolvedTypeMembers: forAllInvolvedTypeMembersAttributes);
         }
 
-        private static Type CreateEquivalentWrapperConnectedType(Type contractType, IDictionary<string, Type> extraCtorParams)
+        private ServicePack CreateEquivalentDisconnectedType(Type contractType)
+        {
+            var onTypeAttributes = WcfAttributeFactory.CreateOnTypeAttributes();
+            var forAllmembersAttributes = WcfAttributeFactory.CreateForAllmembersDisconnectedAttributes();
+            var forAllInvolvedTypesAttributes = WcfAttributeFactory.CreateForAllInvolvedTypesAttributes();
+            var forAllInvolvedTypeMembersAttributes = WcfAttributeFactory.CreateForAllInvolvedTypeMembersAttributes();
+
+            return TypeFactory.CreateInterfaceServicePack(
+                type: contractType,
+                typePostfix: disconnectedPostFix,
+                onType: onTypeAttributes,
+                forAllmembers: forAllmembersAttributes,
+                forAllInvolvedTypes: forAllInvolvedTypesAttributes,
+                forAllInvolvedTypeMembers: forAllInvolvedTypeMembersAttributes,
+                allMethodsVoid: true);
+        }
+
+        private Type CreateEquivalentWrapperType(Type contractType, IDictionary<string, Type> extraCtorParams)
         {
             return TypeFactory.CreateImplementationServicePack(
                     type: contractType,
                     typePostfix: "_Wrapper",
-                    extraCtorParams: extraCtorParams,
-                    @interface: contractType)
+                    interfaces: new[] { contractType, typeof(IDisposable) },
+                    extraCtorParams: extraCtorParams)
                 .MatchType;
-        }
-
-        private static List<AttributePack> CreateForAllInvolvedTypeMembersConnectedAttributes()
-        {
-            return new List<AttributePack>
-            {
-                new AttributePack(
-                    attributeType: typeof(DataMemberAttribute),
-                    ctorParamsMapping: new Dictionary<Type, object>(),
-                    propsValuesMapping: new Dictionary<string, object>()),
-            };
-        }
-
-        private static List<AttributePack> CreateForAllInvolvedTypesConnectedAttributes()
-        {
-            return new List<AttributePack>
-            {
-                new AttributePack(
-                    attributeType: typeof(DataContractAttribute),
-                    ctorParamsMapping: new Dictionary<Type, object>(),
-                    propsValuesMapping: new Dictionary<string, object>()),
-            };
-        }
-
-        private static List<AttributePack> CreateForAllmembersConnectedAttributes()
-        {
-            return new List<AttributePack>
-            {
-                new AttributePack(
-                    attributeType: typeof(OperationContractAttribute)),
-
-                new AttributePack(
-                    attributeType: typeof(TransactionFlowAttribute),
-                    ctorParamsMapping: new Dictionary<Type, object>
-                    {
-                        {typeof(TransactionFlowOption), TransactionFlowOption.Mandatory }
-                    }),
-            };
-        }
-
-        private static List<AttributePack> CreateOnTypeConnectedAttributes()
-        {
-            return new List<AttributePack>
-            {
-                new AttributePack(
-                    attributeType: typeof(ServiceContractAttribute),
-                    propsValuesMapping: new Dictionary<string, object>
-                    {
-                        { nameof(ServiceContractAttribute.SessionMode), SessionMode.Required},
-                    }),
-            };
         }
     }
 }

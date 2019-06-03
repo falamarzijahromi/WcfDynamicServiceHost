@@ -38,7 +38,7 @@
       <HintPath>..\packages\DynamicTypeGenerator.1.0.4\lib\net35\DynamicTypeGenerator.dll</HintPath>
     </Reference>
     <Reference Include="DynamicWcfServiceHost.Shared, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\DHost.Shared.1.0.0\lib\net461\DynamicWcfServiceHost.Shared.dll</HintPath>
+      <HintPath>..\packages\DHost.Shared.1.0.0.1\lib\net461\DynamicWcfServiceHost.Shared.dll</HintPath>
     </Reference>
     <Reference Include="Mapster, Version=4.0.0.0, Culture=neutral, PublicKeyToken=2f39883af23c29a8, processorArchitecture=MSIL">
       <HintPath>..\packages\Mapster.4.0.0\lib\net45\Mapster.dll</HintPath>

@@ -31,6 +31,18 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DynamicServiceHost.Matcher, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\DHost.Matcher.1.0.0.1\lib\net461\DynamicServiceHost.Matcher.dll</HintPath>
+    </Reference>
+    <Reference Include="DynamicTypeGenerator, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\DynamicTypeGenerator.1.0.4\lib\net35\DynamicTypeGenerator.dll</HintPath>
+    </Reference>
+    <Reference Include="DynamicWcfServiceHost.Shared, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\DHost.Shared.1.0.0\lib\net461\DynamicWcfServiceHost.Shared.dll</HintPath>
+    </Reference>
+    <Reference Include="Mapster, Version=4.0.0.0, Culture=neutral, PublicKeyToken=2f39883af23c29a8, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mapster.4.0.0\lib\net45\Mapster.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Messaging" />
@@ -52,12 +64,6 @@
     <Compile Include="WcfRequirements\IocServiceHost.cs" />
     <Compile Include="WcfRequirements\HostInstanceProvider.cs" />
     <Compile Include="WcfRequirements\HostInstanceProviderBehavior.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\DynamicWcfServiceHost.Shared\DynamicWcfServiceHost.Shared.csproj">
-      <Project>{413A2837-01B8-4907-8AFC-00B4B69E67BF}</Project>
-      <Name>DynamicWcfServiceHost.Shared</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

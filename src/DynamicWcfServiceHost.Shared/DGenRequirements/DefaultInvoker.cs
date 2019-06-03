@@ -38,6 +38,27 @@ namespace DynamicWcfServiceHost.Shared.DGenRequirements
             var method = serviceType.GetMethod(context.MethodName);
             var methodParams = method.GetParameters();
 
+            var paramsList = CreteaParamList(context, methodParams);
+
+            var retObject = method.Invoke(serviceObject, paramsList.ToArray());
+
+            return PrepareReturn(context, method, retObject);
+        }
+
+        private object PrepareReturn(InvokationContext context, System.Reflection.MethodInfo method, object retObject)
+        {
+            if (!method.ReturnType.Equals(typeof(void)) && !context.ReturnType.Equals(typeof(void)))
+            {
+                return invokerTypeMapper.Convert(retObject, method.ReturnType, context.ReturnType);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private List<object> CreteaParamList(InvokationContext context, System.Reflection.ParameterInfo[] methodParams)
+        {
             var paramsList = new List<object>();
 
             for (int i = 0; i < methodParams.Length; i++)
@@ -51,17 +72,7 @@ namespace DynamicWcfServiceHost.Shared.DGenRequirements
                 paramsList.Add(invokeParam);
             }
 
-            var retObject = method.Invoke(serviceObject, paramsList.ToArray());
-
-            if (!method.ReturnType.Equals(typeof(void)) && !context.ReturnType.Equals(typeof(void)))
-            {
-                return invokerTypeMapper.Convert(retObject, method.ReturnType, context.ReturnType);
-            }
-            else
-            {
-                return null;
-            }
-
+            return paramsList;
         }
 
         private void DisposeFields(InvokationContext context)

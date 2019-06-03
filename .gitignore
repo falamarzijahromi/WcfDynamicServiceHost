@@ -27,3 +27,15 @@
 /src/DynamicWcfServiceHost.Proxy/obj/Debug
 /src/DynamicWcfServiceHost.Shared/bin/Debug
 /src/DynamicWcfServiceHost.Shared/obj/Debug
+/src/DynamicServiceHost.Host/bin/Release
+/src/DynamicServiceHost.Host/obj/Release
+/src/DynamicServiceHost.Host.Tests/bin/Release
+/src/DynamicServiceHost.Host.Tests/obj/Release
+/src/DynamicServiceHost.Matcher/bin/Release
+/src/DynamicServiceHost.Matcher/obj/Release
+/src/DynamicServiceHost.Matcher.Tests/bin/Release
+/src/DynamicServiceHost.Matcher.Tests/obj/Release
+/src/DynamicWcfServiceHost.Proxy/bin/Release
+/src/DynamicWcfServiceHost.Proxy/obj/Release
+/src/DynamicWcfServiceHost.Shared/bin/Release
+/src/DynamicWcfServiceHost.Shared/obj/Release

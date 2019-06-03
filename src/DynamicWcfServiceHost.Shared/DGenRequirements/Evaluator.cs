@@ -18,7 +18,11 @@ namespace DynamicWcfServiceHost.Shared.DGenRequirements
         {
             var hostInvokationContext = CreateHostInvokationContext(context);
 
-            return hostEvaluator.Evaluate(hostInvokationContext);
+            var retVal = hostEvaluator.Evaluate(hostInvokationContext);
+
+            retVal = RedifineRetVal(retVal, context.ReturnType);
+
+            return retVal;
         }
 
         public static Type CreateDefaultEvaluatorType(Type invokerType)
@@ -28,6 +32,22 @@ namespace DynamicWcfServiceHost.Shared.DGenRequirements
             var setEvaluatorType = nonSetEvaluatorType.MakeGenericType(new[] { invokerType });
 
             return setEvaluatorType;
+        }
+
+        public static object CreateDefaultEvaluator(Type invokerType, IInvokerTypeMapper invokerTypeMapper)
+        {
+            var evaluatorType = CreateDefaultEvaluatorType(invokerType);
+
+            var defaultInvoker = Activator.CreateInstance(invokerType, new[] { invokerTypeMapper });
+
+            var evaluator = Activator.CreateInstance(evaluatorType, new[] { defaultInvoker });
+
+            return evaluator;
+        }
+
+        public static Type GetInvokationEvaluatorType()
+        {
+            return typeof(IInvokationEvaluator);
         }
 
         private InvokationContext CreateHostInvokationContext(DynamicTypeGenerator.Invokations.InvokationContext context)
@@ -44,17 +64,6 @@ namespace DynamicWcfServiceHost.Shared.DGenRequirements
             };
         }
 
-        public static object CreateDefaultEvaluator(Type invokerType, IInvokerTypeMapper invokerTypeMapper)
-        {
-            var evaluatorType = CreateDefaultEvaluatorType(invokerType);
-
-            var defaultInvoker = Activator.CreateInstance(invokerType, new[] { invokerTypeMapper });
-
-            var evaluator = Activator.CreateInstance(evaluatorType, new[] { defaultInvoker });
-
-            return evaluator;
-        }
-
         private static List<ArgInfo> CreateFieldList(DynamicTypeGenerator.Invokations.InvokationContext context)
         {
             var fieldList = new List<ArgInfo>();
@@ -67,11 +76,6 @@ namespace DynamicWcfServiceHost.Shared.DGenRequirements
             return fieldList;
         }
 
-        public static Type GetInvokationEvaluatorType()
-        {
-            return typeof(IInvokationEvaluator);
-        }
-
         private static List<ArgInfo> CreateParamList(DynamicTypeGenerator.Invokations.InvokationContext context)
         {
             var paramList = new List<ArgInfo>();
@@ -82,6 +86,32 @@ namespace DynamicWcfServiceHost.Shared.DGenRequirements
             }
 
             return paramList;
+        }
+
+        private object RedifineRetVal(object retVal, Type returnType)
+        {
+            if (retVal == null && !returnType.Equals(typeof(void)) && !CanConvertNullTo(returnType))
+            {
+                return Activator.CreateInstance(returnType);
+            }
+
+            return retVal;
+        }
+
+        private bool CanConvertNullTo(Type returnType)
+        {
+            var isPossible = true;
+
+            try
+            {
+                Convert.ChangeType(null, returnType);
+            }
+            catch (Exception)
+            {
+                isPossible = false;
+            }
+
+            return isPossible;
         }
     }
 }

@@ -53,7 +53,7 @@ namespace DynamicWcfServiceHost.Shared.DGenRequirements
 
             var retObject = method.Invoke(serviceObject, paramsList.ToArray());
 
-            if (!context.ReturnType.Equals(typeof(void)))
+            if (!method.ReturnType.Equals(typeof(void)))
             {
                 return invokerTypeMapper.Convert(retObject, method.ReturnType, context.ReturnType);
             }

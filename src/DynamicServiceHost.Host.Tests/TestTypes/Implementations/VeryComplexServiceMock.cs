@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using DynamicServiceHost.Host.Tests.TestTypes.Abstracts;
 
 namespace DynamicServiceHost.Host.Tests.TestTypes.Implementations
@@ -22,6 +23,14 @@ namespace DynamicServiceHost.Host.Tests.TestTypes.Implementations
             invokeCounter.AddInvokation(nameof(DoSomething), new object[] {dto, message});
 
             return new List<SimpleDto>(new []{new SimpleDto{Index = 34, Name = "sdf"} });
+        }
+
+        public Guid DoSomethingOnInt(SimpleDto dto, string message)
+        {
+
+            invokeCounter.AddInvokation(nameof(DoSomethingOnInt), new object[] { dto, message });
+
+            return Guid.NewGuid();
         }
     }
 }

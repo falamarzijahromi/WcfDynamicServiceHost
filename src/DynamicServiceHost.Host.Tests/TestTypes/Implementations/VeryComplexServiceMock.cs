@@ -27,7 +27,6 @@ namespace DynamicServiceHost.Host.Tests.TestTypes.Implementations
 
         public Guid DoSomethingOnInt(SimpleDto dto, string message)
         {
-
             invokeCounter.AddInvokation(nameof(DoSomethingOnInt), new object[] { dto, message });
 
             return Guid.NewGuid();

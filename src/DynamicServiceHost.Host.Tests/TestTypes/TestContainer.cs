@@ -10,8 +10,27 @@ namespace DynamicServiceHost.Host.Tests.TestTypes
         private readonly IUnityContainer container;
 
         public TestContainer()
+        : this(new UnityContainer())
         {
-            container = new UnityContainer();
+        }
+
+        public TestContainer(IUnityContainer container)
+        {
+            this.container = container;
+        }
+
+        public IHostContainer CreateLifeScope()
+        {
+            var childContainer = container.CreateChildContainer();
+
+            var lifeScope = new TestContainer(childContainer);
+
+            return lifeScope;
+        }
+
+        public void Dispose()
+        {
+            this.container.Dispose();
         }
 
         public void RegisterSingleton<T>(T instance)

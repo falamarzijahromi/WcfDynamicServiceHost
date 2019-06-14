@@ -32,7 +32,7 @@ namespace DynamicWcfServiceHost.Proxy
                     attributeType: typeof(ServiceContractAttribute),
                     propsValuesMapping: new Dictionary<string, object>
                     {
-                        { nameof(ServiceContractAttribute.SessionMode), isTransactional ? SessionMode.Required : SessionMode.NotAllowed},
+                        { nameof(ServiceContractAttribute.SessionMode), isTransactional ? SessionMode.Required : SessionMode.Allowed},
                     }),
             };
         }

@@ -27,54 +27,115 @@ namespace DynamicServiceHost.Host
         }
         public static List<AttributePack> CreateOnTypeAttributes(bool isTransactional = true)
         {
-            return new List<AttributePack>
-            {
-                new AttributePack(
-                    attributeType: typeof(ServiceContractAttribute),
-                    propsValuesMapping: new Dictionary<string, object>
+            var serviceContract = new AttributePack(
+                attributeType: typeof(ServiceContractAttribute),
+                propsValuesMapping: new Dictionary<string, object>
+                {
                     {
-                        { nameof(ServiceContractAttribute.SessionMode), isTransactional ? SessionMode.Required : SessionMode.NotAllowed},
-                    }),
+                        nameof(ServiceContractAttribute.SessionMode),
+                        isTransactional ? SessionMode.Required : SessionMode.Allowed
+                    },
+                });
 
-                new AttributePack(
+            AttributePack serviceBehavior = null;
+
+            if (isTransactional)
+            {
+                serviceBehavior = new AttributePack(
+                        attributeType: typeof(ServiceBehaviorAttribute),
+                        propsValuesMapping: new Dictionary<string, object>
+                        {
+                            {nameof(ServiceBehaviorAttribute.TransactionAutoCompleteOnSessionClose), true},
+                            {
+                                nameof(ServiceBehaviorAttribute.TransactionIsolationLevel), IsolationLevel.Serializable
+                            },
+                            {nameof(ServiceBehaviorAttribute.ReleaseServiceInstanceOnTransactionComplete), true},
+                            {nameof(ServiceBehaviorAttribute.ConcurrencyMode), ConcurrencyMode.Single},
+                            {
+                                nameof(ServiceBehaviorAttribute.InstanceContextMode), InstanceContextMode.PerSession
+                            },
+                            {nameof(ServiceBehaviorAttribute.EnsureOrderedDispatch), true},
+                            {nameof(ServiceBehaviorAttribute.AutomaticSessionShutdown), true},
+                        });
+            }
+            else
+            {
+                serviceBehavior = new AttributePack(
                     attributeType: typeof(ServiceBehaviorAttribute),
                     propsValuesMapping: new Dictionary<string, object>
                     {
-                        { nameof(ServiceBehaviorAttribute.TransactionAutoCompleteOnSessionClose), isTransactional},
-                        { nameof(ServiceBehaviorAttribute.TransactionIsolationLevel), isTransactional ? IsolationLevel.Serializable : IsolationLevel.ReadUncommitted},
-                        { nameof(ServiceBehaviorAttribute.ReleaseServiceInstanceOnTransactionComplete), isTransactional},
-                        { nameof(ServiceBehaviorAttribute.ConcurrencyMode), ConcurrencyMode.Single},
-                        { nameof(ServiceBehaviorAttribute.InstanceContextMode), isTransactional ? InstanceContextMode.PerSession : InstanceContextMode.PerCall},
-                        { nameof(ServiceBehaviorAttribute.EnsureOrderedDispatch), isTransactional},
-                        { nameof(ServiceBehaviorAttribute.AutomaticSessionShutdown), true},
-                    }),
-            };
+                        {nameof(ServiceBehaviorAttribute.ConcurrencyMode), ConcurrencyMode.Single},
+                        {
+                            nameof(ServiceBehaviorAttribute.InstanceContextMode),
+                            isTransactional ? InstanceContextMode.PerSession : InstanceContextMode.PerCall
+                        },
+                        {nameof(ServiceBehaviorAttribute.AutomaticSessionShutdown), true},
+                    });
+            }
+
+            return new List<AttributePack> { serviceContract, serviceBehavior };
         }
 
 
         public static List<AttributePack> CreateForAllmembersConnectedAttributes(bool isTransactional = true)
         {
-            return new List<AttributePack>
-            {
-                new AttributePack(
-                    attributeType: typeof(OperationContractAttribute)),
+            var operationContract = new AttributePack(
+                attributeType: typeof(OperationContractAttribute));
 
-                new AttributePack(
+            AttributePack operationBehavior = null;
+
+            if (isTransactional)
+            {
+                operationBehavior = new AttributePack(
                     attributeType: typeof(OperationBehaviorAttribute),
                     propsValuesMapping: new Dictionary<string, object>
                     {
-                        { nameof(OperationBehaviorAttribute.TransactionAutoComplete), !isTransactional },
-                        { nameof(OperationBehaviorAttribute.TransactionScopeRequired), isTransactional},
-                        { nameof(OperationBehaviorAttribute.ReleaseInstanceMode), isTransactional ? ReleaseInstanceMode.None : ReleaseInstanceMode.AfterCall},
-                    }),
+                        {nameof(OperationBehaviorAttribute.TransactionAutoComplete), false},
+                        {nameof(OperationBehaviorAttribute.TransactionScopeRequired), true},
+                        {
+                            nameof(OperationBehaviorAttribute.ReleaseInstanceMode), ReleaseInstanceMode.None
+                        },
+                    });
+            }
+            else
+            {
+                operationBehavior = new AttributePack(
+                    attributeType: typeof(OperationBehaviorAttribute),
+                    propsValuesMapping: new Dictionary<string, object>
+                    {
+                        {nameof(OperationBehaviorAttribute.TransactionScopeRequired), false},
+                        {
+                            nameof(OperationBehaviorAttribute.ReleaseInstanceMode), ReleaseInstanceMode.AfterCall
+                        },
+                    });
+            }
 
-                new AttributePack(
+            AttributePack transactionFlow = null;
+
+            if (isTransactional)
+            {
+                transactionFlow = new AttributePack(
                     attributeType: typeof(TransactionFlowAttribute),
                     ctorParamsMapping: new Dictionary<Type, object>
                     {
-                        {typeof(TransactionFlowOption), isTransactional ? TransactionFlowOption.Mandatory : TransactionFlowOption.NotAllowed}
-                    }),
-            };
+                        {
+                            typeof(TransactionFlowOption), TransactionFlowOption.Mandatory
+                        }
+                    });
+            }
+            else
+            {
+                transactionFlow = new AttributePack(
+                    attributeType: typeof(TransactionFlowAttribute),
+                    ctorParamsMapping: new Dictionary<Type, object>
+                    {
+                        {
+                            typeof(TransactionFlowOption), TransactionFlowOption.NotAllowed
+                        }
+                    });
+            }
+
+            return new List<AttributePack> { operationContract, operationBehavior, transactionFlow };
         }
         public static List<AttributePack> CreateForAllmembersDisconnectedAttributes()
         {

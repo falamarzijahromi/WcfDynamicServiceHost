@@ -24,7 +24,7 @@ namespace DynamicWcfServiceHost.Proxy
                     attributeType: typeof(DataContractAttribute))
             };
         }
-        public static List<AttributePack> CreateOnTypeAttributes()
+        public static List<AttributePack> CreateOnTypeAttributes(bool isTransactional = true)
         {
             return new List<AttributePack>
             {
@@ -32,13 +32,13 @@ namespace DynamicWcfServiceHost.Proxy
                     attributeType: typeof(ServiceContractAttribute),
                     propsValuesMapping: new Dictionary<string, object>
                     {
-                        { nameof(ServiceContractAttribute.SessionMode), SessionMode.Required},
+                        { nameof(ServiceContractAttribute.SessionMode), isTransactional ? SessionMode.Required : SessionMode.NotAllowed},
                     }),
             };
         }
 
 
-        public static List<AttributePack> CreateForAllmembersConnectedAttributes()
+        public static List<AttributePack> CreateForAllmembersConnectedAttributes(bool isTransactional = false)
         {
             return new List<AttributePack>
             {
@@ -49,7 +49,7 @@ namespace DynamicWcfServiceHost.Proxy
                     attributeType: typeof(TransactionFlowAttribute),
                     ctorParamsMapping: new Dictionary<Type, object>
                     {
-                        {typeof(TransactionFlowOption), TransactionFlowOption.Mandatory }
+                        {typeof(TransactionFlowOption), isTransactional ? TransactionFlowOption.Mandatory : TransactionFlowOption.NotAllowed}
                     }),
             };
         }

@@ -21,9 +21,9 @@ namespace DynamicWcfServiceHost.Proxy
             this.invoker = invoker ?? typeof(DefaultInvoker);
         }
 
-        public object CreateConnectedChannel(int? arbitaryPort = null)
+        public object CreateConnectedChannel(int? arbitaryPort = null, bool isTransactional = true)
         {
-            var connectedServicePack = CreateEquivalentConnectedType(serviceType);
+            var connectedServicePack = CreateEquivalentConnectedType(serviceType, isTransactional);
 
             var connectedServiceTypeWrapper = CreateEquivalentWrapperType(serviceType,
                 new Dictionary<string, Type>
@@ -87,10 +87,10 @@ namespace DynamicWcfServiceHost.Proxy
             return connectedServiceObject;
         }
 
-        private ServicePack CreateEquivalentConnectedType(Type contractType)
+        private ServicePack CreateEquivalentConnectedType(Type contractType, bool isTransactional)
         {
-            var onTypeAttributes = WcfAttributeFactory.CreateOnTypeAttributes();
-            var forAllmembersAttributes = WcfAttributeFactory.CreateForAllmembersConnectedAttributes();
+            var onTypeAttributes = WcfAttributeFactory.CreateOnTypeAttributes(isTransactional);
+            var forAllmembersAttributes = WcfAttributeFactory.CreateForAllmembersConnectedAttributes(isTransactional);
             var forAllInvolvedTypesAttributes = WcfAttributeFactory.CreateForAllInvolvedTypesAttributes();
             var forAllInvolvedTypeMembersAttributes = WcfAttributeFactory.CreateForAllInvolvedTypeMembersAttributes();
 

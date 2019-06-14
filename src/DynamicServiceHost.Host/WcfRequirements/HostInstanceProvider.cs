@@ -1,9 +1,8 @@
-﻿using System;
+﻿using DynamicServiceHost.Host.Abstracts;
 using System.Collections.Concurrent;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Dispatcher;
-using DynamicServiceHost.Host.Abstracts;
 
 namespace DynamicServiceHost.Host.WcfRequirements
 {
@@ -15,7 +14,7 @@ namespace DynamicServiceHost.Host.WcfRequirements
         public HostInstanceProvider(IHostContainer container)
         {
             this.container = container;
-            this.lifeScopesMapping = new ConcurrentDictionary<object, IHostContainer>();
+            lifeScopesMapping = new ConcurrentDictionary<object, IHostContainer>();
         }
 
         public object GetInstance(InstanceContext instanceContext)

@@ -25,7 +25,7 @@ namespace DynamicServiceHost.Host
                     attributeType: typeof(DataContractAttribute))
             };
         }
-        public static List<AttributePack> CreateOnTypeAttributes()
+        public static List<AttributePack> CreateOnTypeAttributes(bool isTransactional = true)
         {
             return new List<AttributePack>
             {
@@ -33,26 +33,26 @@ namespace DynamicServiceHost.Host
                     attributeType: typeof(ServiceContractAttribute),
                     propsValuesMapping: new Dictionary<string, object>
                     {
-                        { nameof(ServiceContractAttribute.SessionMode), SessionMode.Required},
+                        { nameof(ServiceContractAttribute.SessionMode), isTransactional ? SessionMode.Required : SessionMode.NotAllowed},
                     }),
 
                 new AttributePack(
                     attributeType: typeof(ServiceBehaviorAttribute),
                     propsValuesMapping: new Dictionary<string, object>
                     {
-                        { nameof(ServiceBehaviorAttribute.TransactionAutoCompleteOnSessionClose), true},
-                        { nameof(ServiceBehaviorAttribute.TransactionIsolationLevel), IsolationLevel.Serializable},
-                        { nameof(ServiceBehaviorAttribute.ReleaseServiceInstanceOnTransactionComplete), true},
+                        { nameof(ServiceBehaviorAttribute.TransactionAutoCompleteOnSessionClose), isTransactional},
+                        { nameof(ServiceBehaviorAttribute.TransactionIsolationLevel), isTransactional ? IsolationLevel.Serializable : IsolationLevel.ReadUncommitted},
+                        { nameof(ServiceBehaviorAttribute.ReleaseServiceInstanceOnTransactionComplete), isTransactional},
                         { nameof(ServiceBehaviorAttribute.ConcurrencyMode), ConcurrencyMode.Single},
-                        { nameof(ServiceBehaviorAttribute.InstanceContextMode), InstanceContextMode.PerSession},
-                        { nameof(ServiceBehaviorAttribute.EnsureOrderedDispatch), true},
+                        { nameof(ServiceBehaviorAttribute.InstanceContextMode), isTransactional ? InstanceContextMode.PerSession : InstanceContextMode.PerCall},
+                        { nameof(ServiceBehaviorAttribute.EnsureOrderedDispatch), isTransactional},
                         { nameof(ServiceBehaviorAttribute.AutomaticSessionShutdown), true},
                     }),
             };
         }
 
 
-        public static List<AttributePack> CreateForAllmembersConnectedAttributes()
+        public static List<AttributePack> CreateForAllmembersConnectedAttributes(bool isTransactional = true)
         {
             return new List<AttributePack>
             {
@@ -64,15 +64,15 @@ namespace DynamicServiceHost.Host
                     propsValuesMapping: new Dictionary<string, object>
                     {
                         { nameof(OperationBehaviorAttribute.TransactionAutoComplete), false },
-                        { nameof(OperationBehaviorAttribute.TransactionScopeRequired), true},
-                        { nameof(OperationBehaviorAttribute.ReleaseInstanceMode), ReleaseInstanceMode.None},
+                        { nameof(OperationBehaviorAttribute.TransactionScopeRequired), isTransactional},
+                        { nameof(OperationBehaviorAttribute.ReleaseInstanceMode), isTransactional ? ReleaseInstanceMode.None : ReleaseInstanceMode.AfterCall},
                     }),
 
                 new AttributePack(
                     attributeType: typeof(TransactionFlowAttribute),
                     ctorParamsMapping: new Dictionary<Type, object>
                     {
-                        {typeof(TransactionFlowOption), TransactionFlowOption.Mandatory }
+                        {typeof(TransactionFlowOption), isTransactional ? TransactionFlowOption.Mandatory : TransactionFlowOption.NotAllowed}
                     }),
             };
         }

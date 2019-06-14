@@ -40,9 +40,9 @@ namespace DynamicServiceHost.Host
             disconnectedHost?.Open();
         }
 
-        public void CreateConnectedHost(int? port)
+        public void CreateConnectedHost(int? port = null, bool isTransactional = true)
         {
-            var connectedServicePack = CreateEquivalentConnectedType(serviceType);
+            var connectedServicePack = CreateEquivalentConnectedType(serviceType, isTransactional);
 
             connectedHost = CreateIocHosts(container, connectedServicePack.MatchType, port);
         }
@@ -90,10 +90,10 @@ namespace DynamicServiceHost.Host
                 allMethodsVoid: true);
         }
 
-        private ServicePack CreateEquivalentConnectedType(Type contractType)
+        private ServicePack CreateEquivalentConnectedType(Type contractType, bool isTransactional)
         {
-            var onTypeAttributes = WcfAttributeFactory.CreateOnTypeAttributes();
-            var forAllmembersAttributes = WcfAttributeFactory.CreateForAllmembersConnectedAttributes();
+            var onTypeAttributes = WcfAttributeFactory.CreateOnTypeAttributes(isTransactional);
+            var forAllmembersAttributes = WcfAttributeFactory.CreateForAllmembersConnectedAttributes(isTransactional);
             var forAllInvolvedTypesAttributes = WcfAttributeFactory.CreateForAllInvolvedTypesAttributes();
             var forAllInvolvedTypeMembersAttributes = WcfAttributeFactory.CreateForAllInvolvedTypeMembersAttributes();
 

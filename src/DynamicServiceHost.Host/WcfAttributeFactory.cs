@@ -40,7 +40,7 @@ namespace DynamicServiceHost.Host
                     attributeType: typeof(ServiceBehaviorAttribute),
                     propsValuesMapping: new Dictionary<string, object>
                     {
-                        { nameof(ServiceBehaviorAttribute.TransactionAutoCompleteOnSessionClose), true},
+                        { nameof(ServiceBehaviorAttribute.TransactionAutoCompleteOnSessionClose), isTransactional},
                         { nameof(ServiceBehaviorAttribute.TransactionIsolationLevel), isTransactional ? IsolationLevel.Serializable : IsolationLevel.ReadUncommitted},
                         { nameof(ServiceBehaviorAttribute.ReleaseServiceInstanceOnTransactionComplete), isTransactional},
                         { nameof(ServiceBehaviorAttribute.ConcurrencyMode), ConcurrencyMode.Single},
@@ -63,7 +63,7 @@ namespace DynamicServiceHost.Host
                     attributeType: typeof(OperationBehaviorAttribute),
                     propsValuesMapping: new Dictionary<string, object>
                     {
-                        { nameof(OperationBehaviorAttribute.TransactionAutoComplete), false },
+                        { nameof(OperationBehaviorAttribute.TransactionAutoComplete), !isTransactional },
                         { nameof(OperationBehaviorAttribute.TransactionScopeRequired), isTransactional},
                         { nameof(OperationBehaviorAttribute.ReleaseInstanceMode), isTransactional ? ReleaseInstanceMode.None : ReleaseInstanceMode.AfterCall},
                     }),

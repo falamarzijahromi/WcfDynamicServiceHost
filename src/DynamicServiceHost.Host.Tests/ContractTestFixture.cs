@@ -5,18 +5,21 @@ using DynamicWcfServiceHost.Proxy;
 using System;
 using System.Threading;
 using System.Transactions;
+using DynamicServiceHost.Host.Tests.TestTypes.Implementations;
 
 namespace DynamicServiceHost.Host.Tests
 {
     public abstract class ContractTestFixture
     {
         private readonly IHostContainer container;
+        private readonly ITypeCacher typeCacher;
         private int arbitaryPort;
         private DynamicHost host;
 
         protected ContractTestFixture()
         {
             container = CreateContainer();
+            typeCacher = new TypeCacherMock();
         }
 
         private IHostContainer CreateContainer()
@@ -61,7 +64,7 @@ namespace DynamicServiceHost.Host.Tests
 
             var channelFactory = new ChannelFactory(contractType);
 
-            var channel = channelFactory.CreateConnectedChannel(arbitaryPort);
+            var channel = channelFactory.CreateConnectedChannel(typeCacher, arbitaryPort);
 
             var method = channel.GetType().GetMethod(methodName);
 
@@ -84,7 +87,7 @@ namespace DynamicServiceHost.Host.Tests
         {
             var channelFactory = new ChannelFactory(contractType);
 
-            var channel = channelFactory.CreateDisconnectedChannel();
+            var channel = channelFactory.CreateDisconnectedChannel(typeCacher);
 
             var method = channel.GetType().GetMethod(methodName);
 

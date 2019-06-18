@@ -74,6 +74,7 @@
     <Compile Include="TestTypes\Implementations\ComplexServiceMock.cs" />
     <Compile Include="TestTypes\Abstracts\IAssertor.cs" />
     <Compile Include="TestTypes\Abstracts\IComplexContract.cs" />
+    <Compile Include="TestTypes\Implementations\TypeCacherMock.cs" />
     <Compile Include="TestTypes\Implementations\VeryComplexServiceMock.cs" />
     <Compile Include="TestTypes\InvokeCounter.cs" />
     <Compile Include="TestTypes\Abstracts\ISimpleContract.cs" />

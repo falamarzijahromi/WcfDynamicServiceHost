@@ -2,8 +2,6 @@
 using DynamicWcfServiceHost.Shared.Factories;
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.ServiceModel;
 
 namespace DynamicWcfServiceHost.Proxy
 {
@@ -21,15 +19,18 @@ namespace DynamicWcfServiceHost.Proxy
             this.invoker = invoker ?? typeof(DefaultInvoker);
         }
 
-        public object CreateConnectedChannel(int? arbitaryPort = null, bool isTransactional = true)
+        public object CreateConnectedChannel(
+            ITypeCacher typeCacher,
+            int? arbitaryPort = null, 
+            bool isTransactional = true)
         {
-            var connectedServicePack = CreateEquivalentConnectedType(serviceType, isTransactional);
+            var connectedServicePack = CreateEquivalentConnectedType(serviceType, typeCacher, isTransactional);
 
             var connectedServiceTypeWrapper = CreateEquivalentWrapperType(serviceType,
                 new Dictionary<string, Type>
                 {
                     {"connectedServiceType", connectedServicePack.MatchType},
-                });
+                }, typeCacher);
 
             var connectedServiceObject = CreateDefaultChannel(arbitaryPort, connectedServicePack.MatchType);
 
@@ -40,15 +41,15 @@ namespace DynamicWcfServiceHost.Proxy
             return returnObject;
         }
 
-        public object CreateDisconnectedChannel()
+        public object CreateDisconnectedChannel(ITypeCacher typeCacher)
         {
-            var disconnectedServicePack = CreateEquivalentDisconnectedType(serviceType);
+            var disconnectedServicePack = CreateEquivalentDisconnectedType(serviceType, typeCacher);
 
             var disconnectedServiceTypeWrapper = CreateEquivalentWrapperType(serviceType,
                 new Dictionary<string, Type>
                 {
                     {"disconnectedServiceType", disconnectedServicePack.MatchType},
-                });
+                }, typeCacher);
 
             var connectedServiceObject = CreateDefaultChannel(null, disconnectedServicePack.MatchType);
 
@@ -87,30 +88,51 @@ namespace DynamicWcfServiceHost.Proxy
             return connectedServiceObject;
         }
 
-        private ServicePack CreateEquivalentConnectedType(Type contractType, bool isTransactional)
+        private ServicePack CreateEquivalentConnectedType(
+            Type contractType,
+            ITypeCacher typeCacher,
+            bool isTransactional)
         {
+            var keyObject = $"{serviceType.FullName}-Connected:{isTransactional}";
+
+            if (typeCacher.ContainesKey(keyObject))
+            {
+                return (ServicePack)typeCacher.Get(keyObject);
+            }
+
             var onTypeAttributes = WcfAttributeFactory.CreateOnTypeAttributes(isTransactional);
             var forAllmembersAttributes = WcfAttributeFactory.CreateForAllmembersConnectedAttributes(isTransactional);
             var forAllInvolvedTypesAttributes = WcfAttributeFactory.CreateForAllInvolvedTypesAttributes();
             var forAllInvolvedTypeMembersAttributes = WcfAttributeFactory.CreateForAllInvolvedTypeMembersAttributes();
 
-            return TypeFactory.CreateInterfaceServicePack(
+            var servicePack = TypeFactory.CreateInterfaceServicePack(
                 type: contractType,
                 typePostfix: connectedPostFix,
                 onType: onTypeAttributes,
                 forAllmembers: forAllmembersAttributes,
                 forAllInvolvedTypes: forAllInvolvedTypesAttributes,
                 forAllInvolvedTypeMembers: forAllInvolvedTypeMembersAttributes);
+
+            typeCacher.Hold(keyObject, servicePack);
+
+            return servicePack;
         }
 
-        private ServicePack CreateEquivalentDisconnectedType(Type contractType)
+        private ServicePack CreateEquivalentDisconnectedType(Type contractType, ITypeCacher typeCacher)
         {
+            var keyObject = $"{serviceType.FullName}-Disconnected";
+
+            if (typeCacher.ContainesKey(keyObject))
+            {
+                return (ServicePack)typeCacher.Get(keyObject);
+            }
+
             var onTypeAttributes = WcfAttributeFactory.CreateOnTypeAttributes();
             var forAllmembersAttributes = WcfAttributeFactory.CreateForAllmembersDisconnectedAttributes();
             var forAllInvolvedTypesAttributes = WcfAttributeFactory.CreateForAllInvolvedTypesAttributes();
             var forAllInvolvedTypeMembersAttributes = WcfAttributeFactory.CreateForAllInvolvedTypeMembersAttributes();
 
-            return TypeFactory.CreateInterfaceServicePack(
+            var servicePack = TypeFactory.CreateInterfaceServicePack(
                 type: contractType,
                 typePostfix: disconnectedPostFix,
                 onType: onTypeAttributes,
@@ -118,16 +140,34 @@ namespace DynamicWcfServiceHost.Proxy
                 forAllInvolvedTypes: forAllInvolvedTypesAttributes,
                 forAllInvolvedTypeMembers: forAllInvolvedTypeMembersAttributes,
                 allMethodsVoid: true);
+
+            typeCacher.Hold(keyObject, servicePack);
+
+            return servicePack;
         }
 
-        private Type CreateEquivalentWrapperType(Type contractType, IDictionary<string, Type> extraCtorParams)
+        private Type CreateEquivalentWrapperType(
+            Type contractType,
+            IDictionary<string, Type> extraCtorParams,
+            ITypeCacher typeCacher)
         {
-            return TypeFactory.CreateImplementationServicePack(
+            var keyObject = $"{contractType.FullName}-Wrapper";
+
+            if (typeCacher.ContainesKey(keyObject))
+            {
+                return (Type)typeCacher.Get(keyObject);
+            }
+
+            var wrapperType = TypeFactory.CreateImplementationServicePack(
                     type: contractType,
                     typePostfix: "_Wrapper",
                     interfaces: new[] { contractType, typeof(IDisposable) },
                     extraCtorParams: extraCtorParams)
                 .MatchType;
+
+            typeCacher.Hold(keyObject, wrapperType);
+
+            return wrapperType;
         }
     }
 }

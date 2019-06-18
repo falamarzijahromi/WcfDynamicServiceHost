@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace DynamicServiceHost.Matcher
 {
@@ -19,15 +20,18 @@ namespace DynamicServiceHost.Matcher
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> involvedTypeMembersAttributes;
         private readonly Type[] interfaces;
         private readonly bool allMethodsVoid;
+        private readonly ModuleBuilder moduleBuilder;
 
         public ServiceMatcher(
             Type targetType, TypeCategories typeCategory,
             string namePostfix = null,
             IDictionary<string, Type> ctorExtraParamsType = null,
             bool allMethodsVoid = false,
+            ModuleBuilder moduleBuilder = null,
             params Type[] interfaces)
         {
             this.allMethodsVoid = allMethodsVoid;
+            this.moduleBuilder = moduleBuilder ?? CreateModuleBuilder();
             this.targetType = targetType;
             this.typeCategory = typeCategory;
             this.namePostfix = namePostfix ?? string.Empty;
@@ -83,6 +87,15 @@ namespace DynamicServiceHost.Matcher
             return retPack;
         }
 
+        private ModuleBuilder CreateModuleBuilder()
+        {
+            var asmn = new AssemblyName("DynamicAssembly");
+
+            var asmBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(asmn, AssemblyBuilderAccess.RunAndCollect);
+
+            return asmBuilder.DefineDynamicModule("DynaimModule");
+        }
+
         private IDynamicTypeBuilder CreateDynamicTypeBuilder()
         {
             var ctorParams = new Dictionary<string, Type>(ctorExtraParamsType)
@@ -93,16 +106,16 @@ namespace DynamicServiceHost.Matcher
             switch (typeCategory)
             {
                 case TypeCategories.Class:
-                    return DynamicTypeBuilderFactory.CreateClassBuilder($"{targetType.Name}{namePostfix}", ctorParams);
+                    return DynamicTypeBuilderFactory.CreateClassBuilder($"{targetType.Name}{namePostfix}", ctorParams, moduleBuilder);
 
                 case TypeCategories.Dto:
-                    return DynamicTypeBuilderFactory.CreateDtoBuilder($"{targetType.Name}{namePostfix}");
+                    return DynamicTypeBuilderFactory.CreateDtoBuilder($"{targetType.Name}{namePostfix}", moduleBuilder);
 
                 case TypeCategories.Interface:
-                    return DynamicTypeBuilderFactory.CreateInterfaceBuilder($"{targetType.Name}{namePostfix}", interfaces);
+                    return DynamicTypeBuilderFactory.CreateInterfaceBuilder($"{targetType.Name}{namePostfix}", moduleBuilder, interfaces);
 
                 case TypeCategories.Implementation:
-                    return DynamicTypeBuilderFactory.CreateClassBuilder($"{targetType.Name}{namePostfix}", ctorParams, interfaces);
+                    return DynamicTypeBuilderFactory.CreateClassBuilder($"{targetType.Name}{namePostfix}", ctorParams, moduleBuilder, interfaces);
 
                 default:
                     throw new Exception();
@@ -202,7 +215,7 @@ namespace DynamicServiceHost.Matcher
 
             if (matchType == null && CheckMapPossiblity(type, out Type typeToMap))
             {
-                var propMatcher = new ServiceMatcher(typeToMap, TypeCategories.Dto);
+                var propMatcher = new ServiceMatcher(typeToMap, TypeCategories.Dto, moduleBuilder: moduleBuilder);
 
                 SetInvolvedTypesAttributes(propMatcher);
 

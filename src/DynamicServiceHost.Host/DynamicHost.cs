@@ -5,6 +5,7 @@ using DynamicWcfServiceHost.Shared.DGenRequirements;
 using DynamicWcfServiceHost.Shared.Factories;
 using System;
 using System.Messaging;
+using System.Reflection.Emit;
 using System.ServiceModel;
 
 namespace DynamicServiceHost.Host
@@ -19,11 +20,17 @@ namespace DynamicServiceHost.Host
 
         private readonly Type serviceType;
         private readonly IHostContainer container;
+        private readonly ModuleBuilder moduleBuilder;
 
-        public DynamicHost(Type serviceType, IHostContainer container, Type invokerType = null)
+        public DynamicHost(
+            Type serviceType, 
+            IHostContainer container, 
+            Type invokerType = null,
+            ModuleBuilder moduleBuilder = null)
         {
             this.serviceType = serviceType;
             this.container = container;
+            this.moduleBuilder = moduleBuilder;
 
             RegisterInvokerToContainer(invokerType);
         }
@@ -87,6 +94,7 @@ namespace DynamicServiceHost.Host
                 forAllmembers: forAllmembersAttributes,
                 forAllInvolvedTypes: forAllInvolvedTypesAttributes,
                 forAllInvolvedTypeMembers: forAllInvolvedTypeMembersAttributes,
+                moduleBuilder: moduleBuilder,
                 allMethodsVoid: true);
         }
 
@@ -103,6 +111,7 @@ namespace DynamicServiceHost.Host
                 onType: onTypeAttributes,
                 forAllmembers: forAllmembersAttributes,
                 forAllInvolvedTypes: forAllInvolvedTypesAttributes,
+                moduleBuilder: moduleBuilder,
                 forAllInvolvedTypeMembers: forAllInvolvedTypeMembersAttributes);
         }
 

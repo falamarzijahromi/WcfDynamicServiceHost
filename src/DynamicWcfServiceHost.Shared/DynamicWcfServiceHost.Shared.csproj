@@ -32,10 +32,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DynamicServiceHost.Matcher, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\DHost.Matcher.1.0.0.1\lib\net461\DynamicServiceHost.Matcher.dll</HintPath>
+      <HintPath>..\packages\DHost.Matcher.1.2.2\lib\net461\DynamicServiceHost.Matcher.dll</HintPath>
     </Reference>
     <Reference Include="DynamicTypeGenerator, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\DynamicTypeGenerator.1.0.4\lib\net35\DynamicTypeGenerator.dll</HintPath>
+      <HintPath>..\packages\DynamicTypeGenerator.1.2.0\lib\net461\DynamicTypeGenerator.dll</HintPath>
     </Reference>
     <Reference Include="Mapster, Version=4.0.0.0, Culture=neutral, PublicKeyToken=2f39883af23c29a8, processorArchitecture=MSIL">
       <HintPath>..\packages\Mapster.4.0.0\lib\net45\Mapster.dll</HintPath>

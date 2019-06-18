@@ -1,6 +1,7 @@
 ﻿using DynamicServiceHost.Matcher;
 using System;
 using System.Collections.Generic;
+using System.Reflection.Emit;
 using ServicePack = DynamicWcfServiceHost.Shared.DGenRequirements.ServicePack;
 
 namespace DynamicWcfServiceHost.Shared.Factories
@@ -14,10 +15,11 @@ namespace DynamicWcfServiceHost.Shared.Factories
             IList<AttributePack> forAllmembers,
             IList<AttributePack> forAllInvolvedTypes,
             IList<AttributePack> forAllInvolvedTypeMembers,
+            ModuleBuilder moduleBuilder = null,
             bool allMethodsVoid = false)
         {
             return CreateServicePack(type, TypeCategories.Interface, typePostfix, onType,
-                forAllmembers, forAllInvolvedTypes, forAllInvolvedTypeMembers, allMethodsVoid: allMethodsVoid);
+                forAllmembers, forAllInvolvedTypes, forAllInvolvedTypeMembers, allMethodsVoid: allMethodsVoid, moduleBuilder: moduleBuilder);
         }
 
         public static ServicePack CreateClassServicePack(
@@ -26,33 +28,36 @@ namespace DynamicWcfServiceHost.Shared.Factories
             IList<AttributePack> onType,
             IList<AttributePack> forAllmembers,
             IList<AttributePack> forAllInvolvedTypes,
-            IList<AttributePack> forAllInvolvedTypeMembers, 
+            IList<AttributePack> forAllInvolvedTypeMembers,
             IDictionary<string, Type> extraCtorParams = null,
+            ModuleBuilder moduleBuilder = null,
             bool allMethodsVoid = false)
         {
             return CreateServicePack(
-                type, 
-                TypeCategories.Class, 
-                typePostfix, 
+                type,
+                TypeCategories.Class,
+                typePostfix,
                 onType,
-                forAllmembers, 
-                forAllInvolvedTypes, 
-                forAllInvolvedTypeMembers, 
-                extraCtorParams, 
+                forAllmembers,
+                forAllInvolvedTypes,
+                forAllInvolvedTypeMembers,
+                extraCtorParams,
+                moduleBuilder,
                 allMethodsVoid: allMethodsVoid);
         }
 
         public static ServicePack CreateImplementationServicePack(
             Type type, string typePostfix,
             Type[] interfaces,
+            ModuleBuilder moduleBuilder = null,
             IDictionary<string, Type> extraCtorParams = null)
         {
             return CreateServicePack(
-                type, TypeCategories.Implementation, typePostfix, 
-                new List<AttributePack>(), 
-                new List<AttributePack>(), 
+                type, TypeCategories.Implementation, typePostfix,
                 new List<AttributePack>(),
-                new List<AttributePack>(), extraCtorParams, interfaces: interfaces);
+                new List<AttributePack>(),
+                new List<AttributePack>(),
+                new List<AttributePack>(), extraCtorParams, interfaces: interfaces, moduleBuilder: moduleBuilder);
         }
 
         private static ServicePack CreateServicePack(
@@ -64,10 +69,12 @@ namespace DynamicWcfServiceHost.Shared.Factories
             IList<AttributePack> forAllInvolvedTypes,
             IList<AttributePack> forAllInvolvedTypeMembers,
             IDictionary<string, Type> extraCtorParams = null,
+            ModuleBuilder moduleBuilder = null,
             bool allMethodsVoid = false,
+
             params Type[] interfaces)
         {
-            var matcher = new ServiceMatcher(type, typeCategory, typePostfix, extraCtorParams, interfaces: interfaces, allMethodsVoid: allMethodsVoid);
+            var matcher = new ServiceMatcher(type, typeCategory, typePostfix, extraCtorParams, interfaces: interfaces, allMethodsVoid: allMethodsVoid, moduleBuilder: moduleBuilder);
 
             SetOnTypeAttributes(matcher, onType);
             SetForAllmembersAttributes(matcher, forAllmembers);

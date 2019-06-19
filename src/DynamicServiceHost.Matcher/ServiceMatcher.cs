@@ -207,25 +207,26 @@ namespace DynamicServiceHost.Matcher
         {
             Type matchType = null;
 
-            if (retPack.RelatedTypes.Values.Any(sType => sType.Equals(type)))
-            {
-                matchType = retPack.RelatedTypes.Single(kVT => kVT.Value.Equals(type)).Key;
-            }
-
-
             if (matchType == null && CheckMapPossiblity(type, out Type typeToMap))
             {
-                var propMatcher = new ServiceMatcher(typeToMap, TypeCategories.Dto, moduleBuilder: moduleBuilder);
+                if (retPack.RelatedTypes.Values.Any(sType => sType.Equals(typeToMap)))
+                {
+                    matchType = retPack.RelatedTypes.Single(kVT => kVT.Value.Equals(typeToMap)).Key;
+                }
+                else
+                {
+                    var propMatcher = new ServiceMatcher(typeToMap, TypeCategories.Dto, moduleBuilder: moduleBuilder);
 
-                SetInvolvedTypesAttributes(propMatcher);
+                    SetInvolvedTypesAttributes(propMatcher);
 
-                SetInvolvedTypeMembersAttributes(propMatcher);
+                    SetInvolvedTypeMembersAttributes(propMatcher);
 
-                var propServicePack = propMatcher.Pack();
+                    var propServicePack = propMatcher.Pack();
 
-                matchType = propServicePack.MatchType;
+                    matchType = propServicePack.MatchType;
 
-                AddRelatedTypesToRetPack(retPack, propServicePack);
+                    AddRelatedTypesToRetPack(retPack, propServicePack); 
+                }
             }
 
             matchType = WrapForArraysOrGenerics(type, retPack, matchType);

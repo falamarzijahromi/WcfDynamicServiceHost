@@ -44,6 +44,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DummyTypeContainer.cs" />
+    <Compile Include="IGlobalTypeContainer.cs" />
+    <Compile Include="OptimizationPackage.cs" />
     <Compile Include="ServiceMatcher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServicePack.cs" />

@@ -71,6 +71,9 @@
     <Compile Include="ContractTestFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scenarios\SimpleContractTests.cs" />
+    <Compile Include="Scenarios\TwoMethodContractTests.cs" />
+    <Compile Include="TestTypes\Implementations\TwoMethodScenario.cs" />
+    <Compile Include="TestTypes\Abstracts\ITwoMethodScenario.cs" />
     <Compile Include="TestTypes\Implementations\ComplexServiceMock.cs" />
     <Compile Include="TestTypes\Abstracts\IAssertor.cs" />
     <Compile Include="TestTypes\Abstracts\IComplexContract.cs" />

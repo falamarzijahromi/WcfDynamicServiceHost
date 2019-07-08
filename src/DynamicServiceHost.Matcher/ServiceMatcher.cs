@@ -20,18 +20,22 @@ namespace DynamicServiceHost.Matcher
         private readonly IList<Tuple<Type, IDictionary<Type, object>, IDictionary<string, object>>> involvedTypeMembersAttributes;
         private readonly Type[] interfaces;
         private readonly bool allMethodsVoid;
+        private readonly IOptimizationPackage optimizationPackage;
         private readonly ModuleBuilder moduleBuilder;
+        private readonly IGlobalTypeContainer typeContainer;
 
         public ServiceMatcher(
             Type targetType, TypeCategories typeCategory,
             string namePostfix = null,
             IDictionary<string, Type> ctorExtraParamsType = null,
             bool allMethodsVoid = false,
-            ModuleBuilder moduleBuilder = null,
+            IOptimizationPackage optimizationPackage = null,
             params Type[] interfaces)
         {
             this.allMethodsVoid = allMethodsVoid;
-            this.moduleBuilder = moduleBuilder ?? CreateModuleBuilder();
+            this.optimizationPackage = optimizationPackage;
+            this.moduleBuilder = optimizationPackage?.moduleBuilder ?? CreateModuleBuilder();
+            this.typeContainer = optimizationPackage?.typeContainer ?? new DummyTypeContainer();
             this.targetType = targetType;
             this.typeCategory = typeCategory;
             this.namePostfix = namePostfix ?? string.Empty;
@@ -79,6 +83,8 @@ namespace DynamicServiceHost.Matcher
             BuildMatchType(typeBuilder, retPack);
 
             var matchType = typeBuilder.Build();
+
+            typeContainer.Save(matchType);
 
             retPack.SetMatchType(matchType);
 
@@ -207,15 +213,21 @@ namespace DynamicServiceHost.Matcher
         {
             Type matchType = null;
 
-            if (matchType == null && CheckMapPossiblity(type, out Type typeToMap))
+            if (CheckMapPossiblity(type, out Type typeToMap))
             {
                 if (retPack.RelatedTypes.Values.Any(sType => sType.Equals(typeToMap)))
                 {
                     matchType = retPack.RelatedTypes.Single(kVT => kVT.Value.Equals(typeToMap)).Key;
                 }
+                else if (TryToGetFromGlobalContainer(type, out Type gottenMatchType))
+                {
+                    matchType = gottenMatchType;
+
+                    retPack.AddRelatedType(matchType, type);
+                }
                 else
                 {
-                    var propMatcher = new ServiceMatcher(typeToMap, TypeCategories.Dto, moduleBuilder: moduleBuilder);
+                    var propMatcher = new ServiceMatcher(typeToMap, TypeCategories.Dto, optimizationPackage: optimizationPackage);
 
                     SetInvolvedTypesAttributes(propMatcher);
 
@@ -232,6 +244,22 @@ namespace DynamicServiceHost.Matcher
             matchType = WrapForArraysOrGenerics(type, retPack, matchType);
 
             return matchType ?? type;
+        }
+
+        private bool TryToGetFromGlobalContainer(Type type, out Type gottenMatchedType)
+        {
+            var typeKeyName = $"{type.Name}{namePostfix}";
+            
+            gottenMatchedType = null;
+
+            if (!typeContainer.Contains(typeKeyName))
+            {
+                return false;
+            }
+
+            gottenMatchedType = typeContainer.Get(typeKeyName);
+
+            return true;
         }
 
         private Type WrapForArraysOrGenerics(Type type, ServicePack retPack, Type matchType)

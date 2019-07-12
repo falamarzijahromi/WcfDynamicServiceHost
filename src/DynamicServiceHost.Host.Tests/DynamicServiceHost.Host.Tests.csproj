@@ -72,6 +72,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scenarios\SimpleContractTests.cs" />
     <Compile Include="Scenarios\TwoMethodContractTests.cs" />
+    <Compile Include="TestTypes\Implementations\TestGlobalContainer.cs" />
+    <Compile Include="TestTypes\Implementations\TestOptimizationPack.cs" />
     <Compile Include="TestTypes\Implementations\TwoMethodScenario.cs" />
     <Compile Include="TestTypes\Abstracts\ITwoMethodScenario.cs" />
     <Compile Include="TestTypes\Implementations\ComplexServiceMock.cs" />
@@ -98,6 +100,10 @@
     <ProjectReference Include="..\DynamicServiceHost.Host\DynamicServiceHost.Host.csproj">
       <Project>{CBD418F7-1D79-4BCE-B6BB-6FA3B7A678C6}</Project>
       <Name>DynamicServiceHost.Host</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DynamicServiceHost.Matcher\DynamicServiceHost.Matcher.csproj">
+      <Project>{38d2fb16-9d44-4cc1-a26c-11fc1ce49356}</Project>
+      <Name>DynamicServiceHost.Matcher</Name>
     </ProjectReference>
     <ProjectReference Include="..\DynamicWcfServiceHost.Proxy\DynamicWcfServiceHost.Proxy.csproj">
       <Project>{fe7d1a92-cfed-4fad-a0b4-74e6c57aeca0}</Project>

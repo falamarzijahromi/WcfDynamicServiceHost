@@ -5,8 +5,9 @@ using DynamicWcfServiceHost.Shared.DGenRequirements;
 using DynamicWcfServiceHost.Shared.Factories;
 using System;
 using System.Messaging;
-using System.Reflection.Emit;
 using System.ServiceModel;
+using DynamicServiceHost.Matcher;
+using ServicePack = DynamicWcfServiceHost.Shared.DGenRequirements.ServicePack;
 
 namespace DynamicServiceHost.Host
 {
@@ -20,17 +21,17 @@ namespace DynamicServiceHost.Host
 
         private readonly Type serviceType;
         private readonly IHostContainer container;
-        private readonly ModuleBuilder moduleBuilder;
+        private readonly IOptimizationPackage optimizationPackage;
 
         public DynamicHost(
             Type serviceType, 
             IHostContainer container, 
             Type invokerType = null,
-            ModuleBuilder moduleBuilder = null)
+            IOptimizationPackage optimizationPackage = null)
         {
             this.serviceType = serviceType;
             this.container = container;
-            this.moduleBuilder = moduleBuilder;
+            this.optimizationPackage = optimizationPackage;
 
             RegisterInvokerToContainer(invokerType);
         }
@@ -94,7 +95,7 @@ namespace DynamicServiceHost.Host
                 forAllmembers: forAllmembersAttributes,
                 forAllInvolvedTypes: forAllInvolvedTypesAttributes,
                 forAllInvolvedTypeMembers: forAllInvolvedTypeMembersAttributes,
-                moduleBuilder: moduleBuilder,
+                optimizationPackage: optimizationPackage,
                 allMethodsVoid: true);
         }
 
@@ -111,7 +112,7 @@ namespace DynamicServiceHost.Host
                 onType: onTypeAttributes,
                 forAllmembers: forAllmembersAttributes,
                 forAllInvolvedTypes: forAllInvolvedTypesAttributes,
-                moduleBuilder: moduleBuilder,
+                optimizationPackage: optimizationPackage,
                 forAllInvolvedTypeMembers: forAllInvolvedTypeMembersAttributes);
         }
 

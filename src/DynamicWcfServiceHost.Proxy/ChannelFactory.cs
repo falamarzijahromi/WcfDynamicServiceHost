@@ -3,6 +3,8 @@ using DynamicWcfServiceHost.Shared.Factories;
 using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
+using DynamicServiceHost.Matcher;
+using ServicePack = DynamicWcfServiceHost.Shared.DGenRequirements.ServicePack;
 
 namespace DynamicWcfServiceHost.Proxy
 {
@@ -12,13 +14,16 @@ namespace DynamicWcfServiceHost.Proxy
         private const string disconnectedPostFix = "_Disconnected";
 
         private readonly Type serviceType;
-        private readonly ModuleBuilder moduleBuilder;
         private readonly Type invoker;
+        private readonly IOptimizationPackage optimizationPackage;
 
-        public ChannelFactory(Type serviceType, ModuleBuilder moduleBuilder = null, Type invoker = null)
+        public ChannelFactory(
+            Type serviceType, 
+            IOptimizationPackage optimizationPackage = null, 
+            Type invoker = null)
         {
             this.serviceType = serviceType;
-            this.moduleBuilder = moduleBuilder;
+            this.optimizationPackage = optimizationPackage;
             this.invoker = invoker ?? typeof(DefaultInvoker);
         }
 
@@ -114,7 +119,7 @@ namespace DynamicWcfServiceHost.Proxy
                 onType: onTypeAttributes,
                 forAllmembers: forAllmembersAttributes,
                 forAllInvolvedTypes: forAllInvolvedTypesAttributes,
-                moduleBuilder: moduleBuilder,
+                optimizationPackage: optimizationPackage,
                 forAllInvolvedTypeMembers: forAllInvolvedTypeMembersAttributes);
 
             typeCacher.Hold(keyObject, servicePack);
@@ -142,7 +147,7 @@ namespace DynamicWcfServiceHost.Proxy
                 onType: onTypeAttributes,
                 forAllmembers: forAllmembersAttributes,
                 forAllInvolvedTypes: forAllInvolvedTypesAttributes,
-                moduleBuilder: moduleBuilder,
+                optimizationPackage: optimizationPackage,
                 forAllInvolvedTypeMembers: forAllInvolvedTypeMembersAttributes,
                 allMethodsVoid: true);
 
@@ -167,7 +172,7 @@ namespace DynamicWcfServiceHost.Proxy
                     type: contractType,
                     typePostfix: "_Wrapper",
                     interfaces: new[] { contractType, typeof(IDisposable) },
-                    moduleBuilder: moduleBuilder,
+                    optimizationPackage: optimizationPackage,
                     extraCtorParams: extraCtorParams)
                 .MatchType;
 

@@ -38,7 +38,7 @@ namespace DynamicWcfServiceHost.Proxy
                 new Dictionary<string, Type>
                 {
                     {"connectedServiceType", connectedServicePack.MatchType},
-                }, typeCacher);
+                }, typeCacher, connectedPostFix);
 
             var connectedServiceObject = CreateDefaultChannel(arbitaryPort, connectedServicePack.MatchType);
 
@@ -57,7 +57,7 @@ namespace DynamicWcfServiceHost.Proxy
                 new Dictionary<string, Type>
                 {
                     {"disconnectedServiceType", disconnectedServicePack.MatchType},
-                }, typeCacher);
+                }, typeCacher, disconnectedPostFix);
 
             var connectedServiceObject = CreateDefaultChannel(null, disconnectedServicePack.MatchType);
 
@@ -159,9 +159,10 @@ namespace DynamicWcfServiceHost.Proxy
         private Type CreateEquivalentWrapperType(
             Type contractType,
             IDictionary<string, Type> extraCtorParams,
-            ITypeCacher typeCacher)
+            ITypeCacher typeCacher,
+            string wrapperMode)
         {
-            var keyObject = $"{contractType.FullName}-Wrapper";
+            var keyObject = $"{contractType.FullName}-{wrapperMode}-Wrapper";
 
             if (typeCacher.ContainesKey(keyObject))
             {
@@ -170,7 +171,7 @@ namespace DynamicWcfServiceHost.Proxy
 
             var wrapperType = TypeFactory.CreateImplementationServicePack(
                     type: contractType,
-                    typePostfix: "_Wrapper",
+                    typePostfix: $"{wrapperMode}_Wrapper",
                     interfaces: new[] { contractType, typeof(IDisposable) },
                     optimizationPackage: optimizationPackage,
                     extraCtorParams: extraCtorParams)

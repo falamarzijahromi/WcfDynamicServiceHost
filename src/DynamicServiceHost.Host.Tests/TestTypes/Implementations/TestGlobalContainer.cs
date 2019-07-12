@@ -1,23 +1,21 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using DynamicServiceHost.Matcher;
 
 namespace DynamicServiceHost.Host.Tests.TestTypes.Implementations
 {
     public class TestGlobalContainer : IGlobalTypeContainer
     {
-        public void Save(Type type)
-        {
-            throw new NotImplementedException();
-        }
+        private readonly ConcurrentDictionary<string, Type> mapping;
 
-        public bool Contains(string typeName)
+        public TestGlobalContainer()
         {
-            throw new NotImplementedException();
+            mapping = new ConcurrentDictionary<string, Type>();
         }
+        public void Save(Type type) => mapping[type.FullName] = type;
 
-        public Type Get(string name)
-        {
-            throw new NotImplementedException();
-        }
+        public bool Contains(string typeName) => mapping.ContainsKey(typeName);
+
+        public Type Get(string name) => mapping[name];
     }
 }

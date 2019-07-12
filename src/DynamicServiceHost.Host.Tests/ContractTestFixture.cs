@@ -15,11 +15,13 @@ namespace DynamicServiceHost.Host.Tests
         private readonly ITypeCacher typeCacher;
         private int arbitaryPort;
         private DynamicHost host;
+        private readonly TestOptimizationPack testOptimizationPack;
 
         protected ContractTestFixture()
         {
             container = CreateContainer();
             typeCacher = new TypeCacherMock();
+            testOptimizationPack = new TestOptimizationPack();
         }
 
         private IHostContainer CreateContainer()
@@ -62,7 +64,7 @@ namespace DynamicServiceHost.Host.Tests
         {
             object retObj = null;
 
-            var channelFactory = new ChannelFactory(contractType);
+            var channelFactory = new ChannelFactory(contractType, testOptimizationPack);
 
             var channel = channelFactory.CreateConnectedChannel(typeCacher, arbitaryPort);
 
@@ -85,7 +87,7 @@ namespace DynamicServiceHost.Host.Tests
 
         protected void CallOnDisconnectedProxy(Type contractType, string methodName, params object[] @params)
         {
-            var channelFactory = new ChannelFactory(contractType);
+            var channelFactory = new ChannelFactory(contractType, testOptimizationPack);
 
             var channel = channelFactory.CreateDisconnectedChannel(typeCacher);
 

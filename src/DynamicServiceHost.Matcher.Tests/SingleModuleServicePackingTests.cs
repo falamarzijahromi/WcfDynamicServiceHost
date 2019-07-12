@@ -22,7 +22,7 @@ namespace DynamicServiceHost.Matcher.Tests
             var moduleBuilder = asmBuilder.DefineDynamicModule("DynamicModule");
 
             var testType1 = typeof(IComplexInterface);
-            var testType2 = typeof(VeryComplexDto);
+            var testType2 = typeof(IComplexInterface);
 
             IGlobalTypeContainer typeContainer = new TestGlobalTypeContainer();
 

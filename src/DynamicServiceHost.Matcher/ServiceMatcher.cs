@@ -34,8 +34,8 @@ namespace DynamicServiceHost.Matcher
         {
             this.allMethodsVoid = allMethodsVoid;
             this.optimizationPackage = optimizationPackage;
-            this.moduleBuilder = optimizationPackage?.moduleBuilder ?? CreateModuleBuilder();
-            this.typeContainer = optimizationPackage?.typeContainer ?? new DummyTypeContainer();
+            moduleBuilder = optimizationPackage?.moduleBuilder ?? CreateModuleBuilder();
+            typeContainer = optimizationPackage?.typeContainer ?? new DummyTypeContainer();
             this.targetType = targetType;
             this.typeCategory = typeCategory;
             this.namePostfix = namePostfix ?? string.Empty;
@@ -76,9 +76,23 @@ namespace DynamicServiceHost.Matcher
 
         public ServicePack Pack()
         {
-            var typeBuilder = CreateDynamicTypeBuilder();
-
             var retPack = new ServicePack();
+
+            if (!TryToGetFromGlobalContainer(targetType, out Type matchType))
+            {
+                matchType = CreateMatchType(retPack);
+            }
+
+            retPack.SetMatchType(matchType);
+
+            retPack.AddRelatedType(matchType, targetType);
+
+            return retPack;
+        }
+
+        private Type CreateMatchType(ServicePack retPack)
+        {
+            var typeBuilder = CreateDynamicTypeBuilder();
 
             BuildMatchType(typeBuilder, retPack);
 
@@ -86,11 +100,7 @@ namespace DynamicServiceHost.Matcher
 
             typeContainer.Save(matchType);
 
-            retPack.SetMatchType(matchType);
-
-            retPack.AddRelatedType(matchType, targetType);
-
-            return retPack;
+            return matchType;
         }
 
         private ModuleBuilder CreateModuleBuilder()
@@ -237,7 +247,7 @@ namespace DynamicServiceHost.Matcher
 
                     matchType = propServicePack.MatchType;
 
-                    AddRelatedTypesToRetPack(retPack, propServicePack); 
+                    AddRelatedTypesToRetPack(retPack, propServicePack);
                 }
             }
 
@@ -249,17 +259,15 @@ namespace DynamicServiceHost.Matcher
         private bool TryToGetFromGlobalContainer(Type type, out Type gottenMatchedType)
         {
             var typeKeyName = $"{type.Name}{namePostfix}";
-            
+
             gottenMatchedType = null;
 
-            if (!typeContainer.Contains(typeKeyName))
+            if (typeContainer.Contains(typeKeyName))
             {
-                return false;
+                gottenMatchedType = typeContainer.Get(typeKeyName);
             }
 
-            gottenMatchedType = typeContainer.Get(typeKeyName);
-
-            return true;
+            return (gottenMatchedType != null);
         }
 
         private Type WrapForArraysOrGenerics(Type type, ServicePack retPack, Type matchType)
